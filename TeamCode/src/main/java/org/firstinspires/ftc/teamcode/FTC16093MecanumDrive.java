@@ -71,10 +71,14 @@ public class FTC16093MecanumDrive extends MecanumDrive {
 
    private final BNO055IMU imu;
    private final VoltageSensor batteryVoltageSensor;
+   private List<LynxModule> allHubs;
 
    public FTC16093MecanumDrive(HardwareMap hardwareMap) {
       super(kV, kA, kStatic, TRACK_WIDTH, WHEEL_BASE, LATERAL_MULTIPLIER);
-
+      allHubs = hardwareMap.getAll(LynxModule.class);
+      for (LynxModule module : allHubs) {
+         module.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+      }
       TrajectoryFollower follower = new HolonomicPIDVAFollower(AXIAL_PID, LATERAL_PID, HEADING_PID,
               new Pose2d(20, 20, Math.toRadians(1.5)), 999999);
 
@@ -151,6 +155,7 @@ public class FTC16093MecanumDrive extends MecanumDrive {
    }
 
    public void followTrajectoryAsync(Trajectory trajectory) {
+      simpleMoveIsActivate=false;
       trajectorySequenceRunner.followTrajectorySequenceAsync(
               trajectorySequenceBuilder(trajectory.start())
                       .addTrajectory(trajectory)
@@ -163,11 +168,13 @@ public class FTC16093MecanumDrive extends MecanumDrive {
    }
 
    public void followTrajectory(Trajectory trajectory) {
+      simpleMoveIsActivate=false;
       followTrajectoryAsync(trajectory);
       waitForIdle();
    }
 
    public void followTrajectorySequenceAsync(TrajectorySequence trajectorySequence) {
+      simpleMoveIsActivate=false;
       trajectorySequenceRunner.followTrajectorySequenceAsync(trajectorySequence);
    }
 
@@ -177,12 +184,15 @@ public class FTC16093MecanumDrive extends MecanumDrive {
    }
 
    public void update() {
+      for (LynxModule module : allHubs) {
+         module.clearBulkCache();
+      }
       updatePoseEstimate();
       DriveSignal signal = trajectorySequenceRunner.update(getPoseEstimate(), getPoseVelocity());
-      if (signal != null) {
-         setDriveSignal(signal);
-      } else if (simpleMoveIsActivate) {
+      if (simpleMoveIsActivate) {
          simpleMovePeriod();
+      } else if (signal != null) {
+         setDriveSignal(signal);
       }
    }
 
@@ -194,7 +204,7 @@ public class FTC16093MecanumDrive extends MecanumDrive {
    public boolean isBusy() {
       if (simpleMoveIsActivate) {
          Pose2d err = getSimpleMovePosition().minus(getPoseEstimate());
-         return err.vec().norm() > simpleMoveTranslationTolerance && Math.abs(err.getHeading()) > simpleMoveRotationTolerance;
+         return err.vec().norm() > simpleMoveTranslationTolerance || Math.abs(AngleUnit.normalizeRadians(err.getHeading())) > simpleMoveRotationTolerance;
       }
       return trajectorySequenceRunner.isBusy();
    }
@@ -319,7 +329,7 @@ public class FTC16093MecanumDrive extends MecanumDrive {
    private PIDFController turnPID;
    private double moveHeading = 0;
 
-   private double simpleMoveTranslationTolerance = 25, simpleMoveRotationTolerance = Math.toRadians(5);
+   private double simpleMoveTranslationTolerance = 25, simpleMoveRotationTolerance = Math.toRadians(10);
    private double simpleMovePower = 0.95;
    private boolean simpleMoveIsActivate = false;
 
@@ -356,7 +366,7 @@ public class FTC16093MecanumDrive extends MecanumDrive {
       return new Pose2d(transPID_x.getTargetPosition(), transPID_y.getTargetPosition(), moveHeading);
    }
 
-   private void simpleMovePeriod() {
+   public void simpleMovePeriod() {
       Pose2d current_pos = getPoseEstimate();
       this.setGlobalPower(new Pose2d(
               clamp(transPID_x.update(current_pos.getX()), simpleMovePower),
@@ -365,7 +375,7 @@ public class FTC16093MecanumDrive extends MecanumDrive {
       ));
    }
 
-   public void moveForTime(int timeMM){
+   public void moveForTime(int timeMM) {
       long start_time = System.currentTimeMillis();
       while (!Thread.currentThread().isInterrupted() && System.currentTimeMillis() - start_time < timeMM) {
          update();

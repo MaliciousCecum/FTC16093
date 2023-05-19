@@ -13,8 +13,6 @@ public class AutoTest extends AutoMaster{
       initHardware();
       try {
          longMoveNormal();
-         breakPoint();
-         cone_index = 5;
          eject(firstJunctionPos, 200);
          for (cone_index = 4; cone_index >= 0; cone_index--) {
             try {
@@ -22,8 +20,10 @@ public class AutoTest extends AutoMaster{
             } catch (Configurations.TimeoutException e) {
                intakeSave();
             }
-            eject(firstJunctionPos, 100);
+            moveToEject();
+            eject(firstJunctionPos, 300);
          }
+         breakPoint();
          park();
       } catch (GlobalTimeoutException e) {
          park();

@@ -83,30 +83,40 @@ public class XCYLocalizer implements Localizer {
         return poseVelocity;
     }
     private double heading_rad_correct = 0;
+    private int rev_num = 0;
 
     @Override
     public void update() {
-        int current_x = xEncoder.getCurrentPosition();
-        int current_y = yEncoder.getCurrentPosition();
-        double rotation = imu.getAngularOrientation().firstAngle - heading_rad_correct;
+        int current_right = xEncoder.getCurrentPosition();
+        int current_front = yEncoder.getCurrentPosition();
         double current_time = time.seconds();
+        double rotation = imu.getAngularOrientation().firstAngle - heading_rad_correct;
+        double corrected_rotation = rotation + Math.PI * 2 * rev_num;
+        if (corrected_rotation - last_rotation > Math.PI) {
+            rev_num--;
+        } else if (corrected_rotation - last_rotation < -Math.PI) {
+            rev_num++;
+        }
+        corrected_rotation = rotation + Math.PI * 2 * rev_num;
+
+        double rotation_avg = AngleUnit.normalizeRadians((last_rotation+corrected_rotation)/2);
+
         double d_time = last_time - current_time;
-        double d_rotation = AngleUnit.normalizeRadians(rotation - last_rotation);
+        double d_rotation = (corrected_rotation - last_rotation);
 
-        double d_x = encoderTicksToMM(current_x - last_x_pos) - d_rotation * X_OFFSET;
-        double d_y = encoderTicksToMM(current_y - last_y_pos) - d_rotation * Y_OFFSET;
-        Vector2d d_pos = (new Vector2d(d_x, d_y)).rotated(rotation);
+        double d_x = encoderTicksToMM(current_right - last_x_pos) - d_rotation * X_OFFSET;
+        double d_y = encoderTicksToMM(current_front - last_y_pos) - d_rotation * Y_OFFSET;
+        Vector2d d_pos = (new Vector2d(d_x, d_y)).rotated(corrected_rotation);
 
-        poseEstimate = new Pose2d(poseEstimate.vec().plus(d_pos), rotation);
+        poseEstimate = new Pose2d(poseEstimate.vec().plus(d_pos), rotation_avg);
         poseVelocity = new Pose2d(d_pos.div(d_time), imu.getAngularVelocity().zRotationRate);
 
-        last_x_pos = current_x;
-        last_y_pos = current_y;
+        last_x_pos = current_right;
+        last_y_pos = current_front;
         last_time = current_time;
-        last_rotation = rotation;
+        last_rotation = corrected_rotation;
     }
 
-    @Override
     public void setPoseEstimate(@NonNull Pose2d poseEstimate) {
         heading_rad_correct = imu.getAngularOrientation().firstAngle - poseEstimate.getHeading();
         this.poseEstimate = poseEstimate;

@@ -75,7 +75,7 @@ public class TestTeleOp extends LinearOpMode {
          }
 
          drive.update();
-
+         XCYBoolean.bulkRead();
          if (gamepad1.start) {
             drive.setPoseEstimate(new Pose2d());
             drive.getLocalizer().setPoseEstimate(new Pose2d());
@@ -85,7 +85,8 @@ public class TestTeleOp extends LinearOpMode {
             drive.initSimpleMove(drive_pos);
             while (drive_auto_move.get()) {
                XCYBoolean.bulkRead();
-               drive.update();
+               drive.updatePoseEstimate();
+               drive.simpleMovePeriod();
             }
             drive.stopSimpleMove();
          }

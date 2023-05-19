@@ -35,7 +35,6 @@ public class TeleOp16093 extends LinearOpMode {
    private Pose2d current_pos;
    //   private Vector2d cone_pos_vec = new Vector2d(50, -1200);
 //   private XCYBoolean to_last_eject;
-   private List<LynxModule> allHubs;
    private boolean holding;
    private Sequence sequence;
 
@@ -46,7 +45,6 @@ public class TeleOp16093 extends LinearOpMode {
    @Override
    public void runOpMode() throws InterruptedException {
       time = NanoClock.system();
-      allHubs = hardwareMap.getAll(LynxModule.class);
       sequence = Sequence.EMPTY_MIDDLE;
       upper = new SuperStructure(
               this,
@@ -95,9 +93,6 @@ public class TeleOp16093 extends LinearOpMode {
 
 //        upper.setAimReleaseCondition(dpad_down, dpad_up, upper_release, button_y);
 //        upper.setWebcamConfig();
-      for (LynxModule module : allHubs) {
-         module.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
-      }
 
       Gamepad.LedEffect effect_holding = new Gamepad.LedEffect.Builder()
               .addStep(1, 0, 0, 65)
@@ -256,7 +251,6 @@ public class TeleOp16093 extends LinearOpMode {
 
    }
 
-
    private double last_time_sec;
    private double period_time_sec;
 
@@ -267,9 +261,6 @@ public class TeleOp16093 extends LinearOpMode {
       telemetry.addData("elapse time", period_time_sec * 1000);
       last_time_sec = time.seconds();
       telemetry.update();
-      for (LynxModule module : allHubs) {
-         module.clearBulkCache();
-      }
    }
 
    private void drive_period() {

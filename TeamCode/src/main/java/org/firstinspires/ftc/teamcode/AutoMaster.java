@@ -77,7 +77,7 @@ public abstract class AutoMaster extends LinearOpMode {
 //      });
       MIDDLE_EJECT_POS = new Pose2d(1200, 174 * startSide, Math.toRadians(-117) * startSide);
 
-      GRAB_POS = new Pose2d(x_axis, 1440 * startSide, Math.toRadians(90) * startSide);
+      GRAB_POS = new Pose2d(x_axis, 1460 * startSide, Math.toRadians(90) * startSide);
 
       SIDE_POS = new Pose2d(x_axis, 995 * startSide, Math.toRadians(91.7) * startSide);
       startPos = new Pose2d(0, 900 * startSide, Math.toRadians(180) * startSide);
@@ -92,7 +92,7 @@ public abstract class AutoMaster extends LinearOpMode {
       drive.getLocalizer().setPoseEstimate(startPos);
       drive.update();
       drive.getLocalizer().setPoseEstimate(startPos);
-      drive.setSimpleMoveTolerance(30,10);
+      drive.setSimpleMoveTolerance(30,Math.toRadians(10));
       telemetry.addLine("init: superstructure");
       telemetry.update();
       upper = new SuperStructure(
@@ -133,7 +133,7 @@ public abstract class AutoMaster extends LinearOpMode {
       }
       waitForStart();
       runtime.reset();
-      drive.setSimpleMovePower(0.5);
+      drive.setSimpleMovePower(0.7);
 
 //      webcam.closeCameraDeviceAsync(() -> {
 //      });

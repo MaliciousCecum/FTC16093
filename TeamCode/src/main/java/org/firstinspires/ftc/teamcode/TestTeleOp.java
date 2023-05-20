@@ -19,6 +19,7 @@ public class TestTeleOp extends LinearOpMode {
    Servo leftClaw;
    Servo hand;
    public static double armPos = 0.68;
+   public static double speed = 0.3;
 
    @Override
    public void runOpMode() {
@@ -39,7 +40,7 @@ public class TestTeleOp extends LinearOpMode {
          double x = -gamepad1.left_stick_y;
          double y = -gamepad1.right_stick_x;
          double turn = gamepad1.left_trigger - gamepad1.right_trigger;
-         drive.setDrivePower(new Pose2d(x, y, turn).times(0.3));
+         drive.setDrivePower(new Pose2d(x, y, turn).times(speed));
 //         DcMotorEx motor = hardwareMap.get(DcMotorEx.class,"rf");
 //         motor.setPower(gamepad1.right_stick_y);
 
@@ -85,8 +86,7 @@ public class TestTeleOp extends LinearOpMode {
             drive.initSimpleMove(drive_pos);
             while (drive_auto_move.get()) {
                XCYBoolean.bulkRead();
-               drive.updatePoseEstimate();
-               drive.simpleMovePeriod();
+               drive.update();
             }
             drive.stopSimpleMove();
          }

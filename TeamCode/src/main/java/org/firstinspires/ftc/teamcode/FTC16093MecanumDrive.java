@@ -321,8 +321,8 @@ public class FTC16093MecanumDrive extends MecanumDrive {
       return new ProfileAccelerationConstraint(maxAccel);
    }
 
-   public static PIDCoefficients translationPid = new PIDCoefficients(0.0065, 0.000, 0.0009);
-   public static PIDCoefficients headingPid = new PIDCoefficients(1.7, 0., 0.16);
+   public static PIDCoefficients translationPid = new PIDCoefficients(0.007, 0.000, 0.0009);
+   public static PIDCoefficients headingPid = new PIDCoefficients(1.9, 0., 0.16);
 
    private PIDFController transPID_x;
    private PIDFController transPID_y;

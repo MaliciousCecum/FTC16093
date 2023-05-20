@@ -247,8 +247,6 @@ public class TeleOp16093 extends LinearOpMode {
             upper.runtimeResetLifter();
          }
       }
-
-
    }
 
    private double last_time_sec;

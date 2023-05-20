@@ -92,6 +92,7 @@ public abstract class AutoMaster extends LinearOpMode {
       drive.getLocalizer().setPoseEstimate(startPos);
       drive.update();
       drive.getLocalizer().setPoseEstimate(startPos);
+      drive.setSimpleMoveTolerance(30,10);
       telemetry.addLine("init: superstructure");
       telemetry.update();
       upper = new SuperStructure(
@@ -193,7 +194,7 @@ public abstract class AutoMaster extends LinearOpMode {
 
    protected void intake(int index, Junction lastJunction) throws Exception {
       upper.toOrigional();
-      drive.initSimpleMove(new Pose2d(x_axis, MIDDLE_EJECT_POS.getY(),Math.toRadians(90)));
+      drive.initSimpleMove(new Pose2d(x_axis, MIDDLE_EJECT_POS.getY(), Math.toRadians(90)));
       drive.waitForIdle();
       drive.moveForTime(200);
       drive.initSimpleMove(GRAB_POS);
@@ -215,15 +216,15 @@ public abstract class AutoMaster extends LinearOpMode {
       drive.moveForTime(200);
    }
 
-   protected void moveToEject(){
-      drive.initSimpleMove(new Pose2d(x_axis, MIDDLE_EJECT_POS.getY()+150*startSide,Math.toRadians(90)));
+   protected void moveToEject() {
+      drive.initSimpleMove(new Pose2d(x_axis, MIDDLE_EJECT_POS.getY() + 150 * startSide, Math.toRadians(90)));
       drive.waitForIdle();
       drive.initSimpleMove(new Pose2d(
-              x_axis, MIDDLE_EJECT_POS.getY()+150*startSide,
+              x_axis, MIDDLE_EJECT_POS.getY() + 150 * startSide,
               MIDDLE_EJECT_POS.getHeading()));
-      upper.toHighJunction();
       drive.waitForIdle();
       drive.initSimpleMove(MIDDLE_EJECT_POS);
+      upper.toHighJunction();
       drive.waitForIdle();
       drive.moveForTime(200);
    }

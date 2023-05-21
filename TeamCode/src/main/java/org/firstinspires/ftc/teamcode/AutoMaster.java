@@ -5,18 +5,15 @@ import static org.firstinspires.ftc.teamcode.Configurations.*;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import java.util.List;
 
 @Config
 public abstract class AutoMaster extends LinearOpMode {
 
    public enum Junction {
-      SIDE, MIDDLE, EMPTY
+      HIGH, MIDDLE
    }
 
    private ElapsedTime runtime;
@@ -76,7 +73,7 @@ public abstract class AutoMaster extends LinearOpMode {
 //         }
 //      });
       MIDDLE_EJECT_FIRST_POS = new Pose2d(1200, 174 * startSide, Math.toRadians(-125) * startSide);
-      MIDDLE_EJECT_POS = new Pose2d(x_axis+330, 320 * startSide, Math.toRadians(90) * startSide);
+      MIDDLE_EJECT_POS = new Pose2d(x_axis+100, 800 * startSide, Math.toRadians(-45) * startSide);
 
       GRAB_POS = new Pose2d(x_axis, 1460 * startSide, Math.toRadians(90) * startSide);
 
@@ -104,7 +101,7 @@ public abstract class AutoMaster extends LinearOpMode {
       upper.setSideIsRed(side_color);
       telemetry.addLine("init: trajectory");
       telemetry.update();
-      if (firstJunctionPos == Junction.MIDDLE) {
+      if (firstJunctionPos == Junction.HIGH) {
          startToEject = drive.trajectoryBuilder(startPos)
                  .lineToLinearHeading(new Pose2d(1000, 930 * startSide, Math.toRadians(-180) * startSide))
                  .splineToSplineHeading(new Pose2d(x_axis, 560 * startSide, Math.toRadians(-90) * startSide), Math.toRadians(-90) * startSide)
@@ -144,7 +141,7 @@ public abstract class AutoMaster extends LinearOpMode {
       if (isStopRequested()) return;
       upper.closeHand();
       drive.followTrajectoryAsync(startToEject);
-      if (firstJunctionPos == Junction.MIDDLE) {
+      if (firstJunctionPos == Junction.HIGH) {
          while (opModeIsActive() && Math.abs(drive.getPoseEstimate().getY() - MIDDLE_EJECT_FIRST_POS.getY()) > 150) {
             drive.update();
          }
@@ -162,7 +159,7 @@ public abstract class AutoMaster extends LinearOpMode {
 
    protected void intake(int index, Junction lastJunction) throws Exception {
       drive.setSimpleMovePower(0.5);
-      if (lastJunction == Junction.MIDDLE) {
+      if (lastJunction == Junction.HIGH) {
          upper.toOrigional();
          drive.initSimpleMove(new Pose2d(x_axis, drive.getSimpleMovePosition().getY(), Math.toRadians(90)*startSide));
          drive.waitForIdle();
@@ -189,7 +186,7 @@ public abstract class AutoMaster extends LinearOpMode {
 
    protected void moveToEject() {
       drive.setSimpleMovePower(0.7);
-      drive.initSimpleMove(new Pose2d(x_axis, 250 * startSide, Math.toRadians(90)*startSide));
+      drive.initSimpleMove(new Pose2d(x_axis, 950 * startSide, Math.toRadians(90)*startSide));
       drive.waitForIdle();
       drive.setSimpleMovePower(0.4);
       drive.initSimpleMove(MIDDLE_EJECT_POS);

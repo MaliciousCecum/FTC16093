@@ -24,7 +24,7 @@ public class XCYLocalizer implements Localizer {
     public static final double WHEEL_RADIUS = 25.4; // mm
     public static double Y_OFFSET = 68;
     public static double X_OFFSET = -28.5;
-    public static final double IMU_CONSTANT = Math.toRadians(9.6/6)/(Math.PI*2);
+    public static final double IMU_CONSTANT = Math.toRadians(9./6)/(Math.PI*2);
 
     private final Encoder xEncoder, yEncoder;
     private final BNO055IMU imu;
@@ -99,16 +99,16 @@ public class XCYLocalizer implements Localizer {
         }
         corrected_rotation = rotation + Math.PI * 2 * rev_num;
 
-        double rotation_avg = AngleUnit.normalizeRadians((last_rotation+corrected_rotation)/2);
+        double rotation_avg = AngleUnit.normalizeRadians((last_rotation+corrected_rotation)/2)+(corrected_rotation+heading_rad_correct)*IMU_CONSTANT;
 
         double d_time = last_time - current_time;
         double d_rotation = (corrected_rotation - last_rotation);
 
         double d_x = encoderTicksToMM(current_right - last_x_pos) - d_rotation * X_OFFSET;
         double d_y = encoderTicksToMM(current_front - last_y_pos) - d_rotation * Y_OFFSET;
-        Vector2d d_pos = (new Vector2d(d_x, d_y)).rotated(corrected_rotation);
+        Vector2d d_pos = (new Vector2d(d_x, d_y)).rotated(rotation_avg);
 
-        poseEstimate = new Pose2d(poseEstimate.vec().plus(d_pos), rotation_avg+(corrected_rotation+heading_rad_correct)*IMU_CONSTANT);
+        poseEstimate = new Pose2d(poseEstimate.vec().plus(d_pos), rotation_avg);
         poseVelocity = new Pose2d(d_pos.div(d_time), imu.getAngularVelocity().zRotationRate);
 
         last_x_pos = current_right;

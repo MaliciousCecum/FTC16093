@@ -64,6 +64,7 @@ public class TeleOp16093 extends LinearOpMode {
       XCYBoolean mid_j;
       XCYBoolean cone_saveL;
       XCYBoolean cone_saveR;
+      XCYBoolean setOriginal;
       cone_saveL = new XCYBoolean(() -> gamepad1.back);
       cone_saveR = new XCYBoolean(() -> gamepad1.start);
 
@@ -75,6 +76,7 @@ public class TeleOp16093 extends LinearOpMode {
             high_j = new XCYBoolean(() -> (gamepad1.triangle || (gamepad1.right_bumper && sequence == Sequence.HOLDING_AWAIT)) && !gamepad1.share);
             low_j = new XCYBoolean(() -> !gamepad1.share && (gamepad2.dpad_down || gamepad1.dpad_down));
             mid_j = new XCYBoolean(() -> !gamepad1.share && (gamepad2.dpad_up || gamepad1.dpad_up));
+            setOriginal = new XCYBoolean(()->gamepad1.touchpad);
             break;
          default:
             arm_down = new XCYBoolean(() -> gamepad1.right_bumper);
@@ -83,6 +85,7 @@ public class TeleOp16093 extends LinearOpMode {
             high_j = new XCYBoolean(() -> gamepad1.y);
             low_j = new XCYBoolean(() -> gamepad1.a);
             mid_j = new XCYBoolean(() -> gamepad1.b);
+            setOriginal = new XCYBoolean(()->gamepad1.back&&gamepad1.x);
       }
 
 //      XCYBoolean reset_imu = new XCYBoolean(() -> gamepad1.share && gamepad1.square);
@@ -245,6 +248,10 @@ public class TeleOp16093 extends LinearOpMode {
             gamepad1.runLedEffect(effect_idle);
             upper.toOrigional();
             upper.runtimeResetLifter();
+         }
+         if (setOriginal.toFalse()) {
+            drive.getLocalizer().setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
+            drive.setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
          }
       }
    }

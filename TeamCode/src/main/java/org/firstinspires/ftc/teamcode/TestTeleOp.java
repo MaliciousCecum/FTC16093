@@ -28,19 +28,23 @@ public class TestTeleOp extends LinearOpMode {
       leftLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       rightLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       leftLift.setDirection(DcMotorSimple.Direction.REVERSE);
-      XCYBoolean drive_auto_move = new XCYBoolean(()->gamepad1.back);
-      FTC16093MecanumDrive drive = new FTC16093MecanumDrive(hardwareMap);
+      XCYBoolean drive_auto_move = new XCYBoolean(() -> gamepad1.back);
+      AutoMecanumDrive drive = new AutoMecanumDrive(hardwareMap);
       rightClaw = hardwareMap.get(Servo.class, "rightClaw");
       leftClaw = hardwareMap.get(Servo.class, "leftClaw");
       hand = hardwareMap.get(Servo.class, "hand");
       waitForStart();
       Pose2d drive_pos = new Pose2d();
-      drive.setPoseEstimate(new Pose2d(0,0,0));
+      drive.setPoseEstimate(new Pose2d(0, 0, 0));
       while (opModeIsActive()) {
-         double x = -gamepad1.left_stick_y;
-         double y = -gamepad1.right_stick_x;
-         double turn = gamepad1.left_trigger - gamepad1.right_trigger;
-         drive.setDrivePower(new Pose2d(x, y, turn).times(speed));
+         if (gamepad2.start && drive.isDetected()) {
+            drive.lineFollowPeriod(gamepad2.left_stick_y*-0.25);
+         } else {
+            double x = -gamepad1.left_stick_y;
+            double y = -gamepad1.right_stick_x;
+            double turn = gamepad1.left_trigger - gamepad1.right_trigger;
+            drive.setDrivePower(new Pose2d(x, y, turn).times(speed));
+         }
 //         DcMotorEx motor = hardwareMap.get(DcMotorEx.class,"rf");
 //         motor.setPower(gamepad1.right_stick_y);
 
@@ -54,7 +58,10 @@ public class TestTeleOp extends LinearOpMode {
 //            leftLift.setPower(0);
 //            rightLift.setPower(0);
 //         }
-
+         if(gamepad1.touchpad){
+            drive.getLocalizer().setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
+            drive.setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
+         }
          if (gamepad1.x) {
             leftClaw.setPosition(0.27);
             rightClaw.setPosition(0.8);
@@ -63,9 +70,9 @@ public class TestTeleOp extends LinearOpMode {
             rightClaw.setPosition(0.56);
          }
 
-         if (gamepad1.dpad_up){
+         if (gamepad1.dpad_up) {
             setLifter(1000);
-         } else if (gamepad1.dpad_down){
+         } else if (gamepad1.dpad_down) {
             setLifter(10);
          }
 
@@ -93,7 +100,7 @@ public class TestTeleOp extends LinearOpMode {
       }
    }
 
-   private void setLifter(int pos){
+   private void setLifter(int pos) {
       rightLift.setTargetPosition(pos);
       rightLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
       rightLift.setPower(0.6);

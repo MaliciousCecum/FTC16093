@@ -135,8 +135,8 @@ public class SuperStructure {
    }
 
    public void closeHand() {
-      leftClaw.setPosition(0.51);
-      rightClaw.setPosition(0.56);
+      leftClaw.setPosition(0.51+0.02);
+      rightClaw.setPosition(0.56-0.02);
    }
 
    public void coneSaveR() {

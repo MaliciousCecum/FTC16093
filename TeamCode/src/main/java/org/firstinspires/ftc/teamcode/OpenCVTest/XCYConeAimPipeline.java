@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.OpenCVTest;
 
 import com.acmerobotics.dashboard.config.Config;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -27,7 +28,7 @@ public class XCYConeAimPipeline extends OpenCvPipeline {
    private double angle_factor = 0;
    public static int thresh = 170;
    public static int blur_pix = 5;
-   public static int min_detect_area = 3000;
+   public static int min_detect_area = 500;
 
    private boolean DEBUG = false;
 
@@ -68,8 +69,6 @@ public class XCYConeAimPipeline extends OpenCvPipeline {
       if (thresh_img)
          process_mat.copyTo(output_mat);
 
-      if (DEBUG) return output_mat;
-
       Imgproc.findContours(process_mat, contoursList, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
       if (contour)
@@ -87,13 +86,13 @@ public class XCYConeAimPipeline extends OpenCvPipeline {
          Point pointC = midpoint(boxPoints[2], boxPoints[3]);
          Point pointD = midpoint(boxPoints[3], boxPoints[0]);
          if (getDistance(pointA, pointC) > getDistance(pointB, pointD))
-            angle=pointA.x-pointC.x;
+            angle = Math.atan2(pointA.y - pointC.y, pointA.x - pointC.x);
          else
-            angle=pointB.x-pointD.x;
+            angle = Math.atan2(pointB.y - pointD.y, pointB.x - pointD.x);
 
          setData(true,
                  process_mat.cols() * 0.5 - rec.center.x,
-                 angle
+                 AngleUnit.normalizeDegrees(-90 - Math.toDegrees(angle))
          );
       } else {
          setData(false, 0, 0);

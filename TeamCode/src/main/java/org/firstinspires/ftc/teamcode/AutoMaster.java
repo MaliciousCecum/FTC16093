@@ -31,7 +31,7 @@ public abstract class AutoMaster extends LinearOpMode {
 
    public static double x_axis = 1300;
 
-   private FTC16093MecanumDrive drive;
+   private AutoMecanumDrive drive;
    private SuperStructure upper;
 
    Pose2d[] RIGHT_END_POSITIONS = {
@@ -49,7 +49,7 @@ public abstract class AutoMaster extends LinearOpMode {
    };
    Trajectory startToEject;
 
-   Pose2d MIDDLE_EJECT_POS, MIDDLE_EJECT_FIRST_POS, GRAB_POS, SIDE_POS, startPos;
+   Pose2d MIDDLE_EJECT_FIRST_POS, GRAB_POS, SIDE_POS, startPos;
 
    int end_pos_index;
    protected int cone_index;
@@ -73,17 +73,16 @@ public abstract class AutoMaster extends LinearOpMode {
 //         }
 //      });
       MIDDLE_EJECT_FIRST_POS = new Pose2d(1200, 174 * startSide, Math.toRadians(-125) * startSide);
-      MIDDLE_EJECT_POS = new Pose2d(x_axis+100, 800 * startSide, Math.toRadians(-45) * startSide);
 
       GRAB_POS = new Pose2d(x_axis, 1460 * startSide, Math.toRadians(90) * startSide);
 
       SIDE_POS = new Pose2d(x_axis, 995 * startSide, Math.toRadians(91.7) * startSide);
-      startPos = new Pose2d(0, 900 * startSide, Math.toRadians(180) * startSide);
+      startPos = new Pose2d(0, 900 * startSide, 0);
       end_pos_index = 0;
 //      FtcDashboard.getInstance().startCameraStream(webcam, 10);
       telemetry.update();
       telemetry.addLine("init: drive");
-      drive = new FTC16093MecanumDrive(hardwareMap);
+      drive = new AutoMecanumDrive(hardwareMap);
       drive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       drive.setPoseEstimate(startPos);
       drive.update();
@@ -103,8 +102,8 @@ public abstract class AutoMaster extends LinearOpMode {
       telemetry.update();
       if (firstJunctionPos == Junction.HIGH) {
          startToEject = drive.trajectoryBuilder(startPos)
-                 .lineToLinearHeading(new Pose2d(1000, 930 * startSide, Math.toRadians(-180) * startSide))
-                 .splineToSplineHeading(new Pose2d(x_axis, 560 * startSide, Math.toRadians(-90) * startSide), Math.toRadians(-90) * startSide)
+                 .lineToLinearHeading(new Pose2d(x_axis-300, 900 * startSide, 0))
+                 .splineToSplineHeading(new Pose2d(x_axis, 550 * startSide, Math.toRadians(-90) * startSide), Math.toRadians(-90) * startSide)
                  .splineToSplineHeading(MIDDLE_EJECT_FIRST_POS, MIDDLE_EJECT_FIRST_POS.getHeading())
                  .build();
       } else {
@@ -172,6 +171,8 @@ public abstract class AutoMaster extends LinearOpMode {
 //         if (runtime.seconds() > 28.5) throw new GlobalTimeoutException();
       }
       drive.moveForTime(200);
+
+
       drive.stopSimpleMove();
       drive.setDrivePower(new Pose2d(0, 0, 0));
       if (cone_index < 2) {
@@ -189,7 +190,7 @@ public abstract class AutoMaster extends LinearOpMode {
       drive.initSimpleMove(new Pose2d(x_axis, 950 * startSide, Math.toRadians(90)*startSide));
       drive.waitForIdle();
       drive.setSimpleMovePower(0.4);
-      drive.initSimpleMove(MIDDLE_EJECT_POS);
+      drive.initSimpleMove(MIDDLE_EJECT_FIRST_POS);
       upper.toHighJunction();
       drive.waitForIdle();
       drive.moveForTime(200);

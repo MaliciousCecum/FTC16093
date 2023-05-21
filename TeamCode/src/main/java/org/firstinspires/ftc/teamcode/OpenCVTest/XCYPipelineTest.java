@@ -40,7 +40,7 @@ public class XCYPipelineTest extends LinearOpMode {
             @Override
             public void onOpened() {
                 webcam.setPipeline(pipeline);
-                webcam.startStreaming(WIDTH, HEIGHT, OpenCvCameraRotation.UPRIGHT);
+                webcam.startStreaming(WIDTH, HEIGHT, OpenCvCameraRotation.UPSIDE_DOWN);
             }
 
             @Override
@@ -66,8 +66,9 @@ public class XCYPipelineTest extends LinearOpMode {
          * wb min: 2800
          */
         while (opModeIsActive()) {
+            telemetry.addData("is detected",pipeline.isDetected());
             telemetry.addData("offset", pipeline.getOffset());
-            telemetry.addData("distance",pipeline.getAngle());
+            telemetry.addData("angle(deg)",pipeline.getAngle());
             telemetry.addData("wb max", webcam.getWhiteBalanceControl().getMaxWhiteBalanceTemperature());
             telemetry.addData("wb min", webcam.getWhiteBalanceControl().getMinWhiteBalanceTemperature());
             telemetry.addData("wb", webcam.getWhiteBalanceControl().getWhiteBalanceTemperature());

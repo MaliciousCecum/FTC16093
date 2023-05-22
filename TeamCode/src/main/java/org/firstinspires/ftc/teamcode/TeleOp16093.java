@@ -6,14 +6,11 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.util.NanoClock;
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.Range;
-
-import java.util.List;
 
 @Config
 @TeleOp
@@ -31,7 +28,7 @@ public class TeleOp16093 extends LinearOpMode {
    public static final double x_static_compensation = 0.06;
    public static final double y_static_compensation = 0.06;
 
-   private FTC16093MecanumDrive drive;
+   private BasicMecanumDrive drive;
    private Pose2d current_pos;
    //   private Vector2d cone_pos_vec = new Vector2d(50, -1200);
 //   private XCYBoolean to_last_eject;
@@ -52,7 +49,7 @@ public class TeleOp16093 extends LinearOpMode {
                  logic_period();
                  drive_period();
               });
-      drive = new FTC16093MecanumDrive(hardwareMap);
+      drive = new BasicMecanumDrive(hardwareMap);
       drive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //      drive.getLocalizer().setPoseEstimate(get_pos_from_csv());
       holding = false;
@@ -76,7 +73,7 @@ public class TeleOp16093 extends LinearOpMode {
             high_j = new XCYBoolean(() -> (gamepad1.triangle || (gamepad1.right_bumper && sequence == Sequence.HOLDING_AWAIT)) && !gamepad1.share);
             low_j = new XCYBoolean(() -> !gamepad1.share && (gamepad2.dpad_down || gamepad1.dpad_down));
             mid_j = new XCYBoolean(() -> !gamepad1.share && (gamepad2.dpad_up || gamepad1.dpad_up));
-            setOriginal = new XCYBoolean(()->gamepad1.touchpad);
+            setOriginal = new XCYBoolean(() -> gamepad1.touchpad);
             break;
          default:
             arm_down = new XCYBoolean(() -> gamepad1.right_bumper);
@@ -85,7 +82,7 @@ public class TeleOp16093 extends LinearOpMode {
             high_j = new XCYBoolean(() -> gamepad1.y);
             low_j = new XCYBoolean(() -> gamepad1.a);
             mid_j = new XCYBoolean(() -> gamepad1.b);
-            setOriginal = new XCYBoolean(()->gamepad1.back&&gamepad1.x);
+            setOriginal = new XCYBoolean(() -> gamepad1.back && gamepad1.x);
       }
 
 //      XCYBoolean reset_imu = new XCYBoolean(() -> gamepad1.share && gamepad1.square);
@@ -212,7 +209,7 @@ public class TeleOp16093 extends LinearOpMode {
                long startTime;
                if (upper_release.get())
                   do {
-                     while (!(upper_release.toTrue() || high_j.get() || mid_j.get() || low_j.get()|| intake_action.get())) {
+                     while (!(upper_release.toTrue() || high_j.get() || mid_j.get() || low_j.get() || intake_action.get())) {
                         logic_period();
                         drive_period();
                      }

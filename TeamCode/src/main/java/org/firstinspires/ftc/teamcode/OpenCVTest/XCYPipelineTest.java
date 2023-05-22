@@ -28,14 +28,14 @@ public class XCYPipelineTest extends LinearOpMode {
     public static final int HEIGHT = 480;
 
     OpenCvWebcam webcam;
-    XCYConeAimPipeline pipeline;
+    XCYAimPipeline pipeline;
 
     @Override
     public void runOpMode() {
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-        pipeline = new XCYConeAimPipeline();
+        pipeline = new XCYAimPipeline();
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
             public void onOpened() {

@@ -158,6 +158,7 @@ public abstract class AutoMaster extends LinearOpMode {
 
    protected void intake(int index, Junction lastJunction) throws Exception {
       drive.setSimpleMovePower(0.5);
+
       if (lastJunction == Junction.HIGH) {
          upper.toOrigional();
          drive.initSimpleMove(new Pose2d(x_axis, drive.getSimpleMovePosition().getY(), Math.toRadians(90)*startSide));

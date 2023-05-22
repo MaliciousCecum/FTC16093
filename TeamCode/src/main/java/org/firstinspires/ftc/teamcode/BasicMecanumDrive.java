@@ -46,7 +46,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Config
-public class FTC16093MecanumDrive extends MecanumDrive {
+public class BasicMecanumDrive extends MecanumDrive {
    public static PIDCoefficients AXIAL_PID = new PIDCoefficients(10, 0, 0); //todo
    public static PIDCoefficients LATERAL_PID = new PIDCoefficients(10, 0, 0);
    public static PIDCoefficients HEADING_PID = new PIDCoefficients(5, 0, 0);
@@ -73,7 +73,7 @@ public class FTC16093MecanumDrive extends MecanumDrive {
    private final VoltageSensor batteryVoltageSensor;
    private List<LynxModule> allHubs;
 
-   public FTC16093MecanumDrive(HardwareMap hardwareMap) {
+   public BasicMecanumDrive(HardwareMap hardwareMap) {
       super(kV, kA, kStatic, TRACK_WIDTH, WHEEL_BASE, LATERAL_MULTIPLIER);
       allHubs = hardwareMap.getAll(LynxModule.class);
       for (LynxModule module : allHubs) {

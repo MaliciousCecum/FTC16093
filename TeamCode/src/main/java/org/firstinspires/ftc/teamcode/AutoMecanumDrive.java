@@ -10,19 +10,18 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.WhiteBalanceControl;
-import org.firstinspires.ftc.teamcode.OpenCVTest.XCYConeAimPipeline;
+import org.firstinspires.ftc.teamcode.OpenCVTest.XCYAimPipeline;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvWebcam;
 
 @Config
-public class AutoMecanumDrive extends FTC16093MecanumDrive{
+public class AutoMecanumDrive extends BasicMecanumDrive {
    OpenCvWebcam webcam;
-   XCYConeAimPipeline pipeline;
+   XCYAimPipeline pipeline;
    public static final int WIDTH = 640;
    public static final int HEIGHT = 480;
-   private boolean isRed;
    public static PIDCoefficients lfPIDCoeff = new PIDCoefficients(0.5, 0, 0.01);
    private final PIDFController lfPID;
 
@@ -30,7 +29,7 @@ public class AutoMecanumDrive extends FTC16093MecanumDrive{
       super(hardwareMap);
       int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
       webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-      pipeline = new XCYConeAimPipeline();
+      pipeline = new XCYAimPipeline();
       webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
          @Override
          public void onOpened() {
@@ -50,12 +49,21 @@ public class AutoMecanumDrive extends FTC16093MecanumDrive{
    }
 
    public void setRed(boolean red) {
-      isRed = red;
+      pipeline.setSideRed(red);
+   }
+
+   public void setJunctionMode(boolean junction){
+      pipeline.setJunctionMode(junction);
    }
 
    public boolean isDetected(){
       return pipeline.isDetected();
    }
+
+   public double getOffSet(){
+      return pipeline.getOffset();
+   }
+
    public void lineFollowPeriod(double powerX){
       setDrivePower(new Pose2d(
               powerX,

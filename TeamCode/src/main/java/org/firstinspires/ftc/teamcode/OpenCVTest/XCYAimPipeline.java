@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Config
-public class XCYConeAimPipeline extends OpenCvPipeline {
+public class XCYAimPipeline extends OpenCvPipeline {
    Mat process_mat = new Mat();
    Mat output_mat = new Mat();
    List<MatOfPoint> contoursList = new ArrayList<>();
@@ -26,13 +26,15 @@ public class XCYConeAimPipeline extends OpenCvPipeline {
    private boolean is_detected = false;
    private double cone_x_offset = 0;
    private double angle_factor = 0;
-   public static int thresh = 170;
+   public static int coneAimThresh = 170;
+   public static int junctionThresh = 70;
    public static int blur_pix = 5;
    public static int min_detect_area = 500;
 
    private boolean DEBUG = false;
 
    private boolean isSideRed = false;
+   private boolean junctionMode = false;
 
    public static boolean cb_blur_img = false;
    public static boolean thresh_img = false;
@@ -45,6 +47,7 @@ public class XCYConeAimPipeline extends OpenCvPipeline {
 
    public void setSideRed(boolean isRed) {
       isSideRed = isRed;
+      junctionMode = false;
    }
 
    @Override
@@ -52,7 +55,7 @@ public class XCYConeAimPipeline extends OpenCvPipeline {
       contoursList.clear();
       Imgproc.cvtColor(input, process_mat, Imgproc.COLOR_RGB2YCrCb);
 
-      if (isSideRed)
+      if (isSideRed && !junctionMode)
          Core.extractChannel(process_mat, process_mat, 1);
       else
          Core.extractChannel(process_mat, process_mat, 2);
@@ -64,7 +67,10 @@ public class XCYConeAimPipeline extends OpenCvPipeline {
       if (cb_blur_img)
          process_mat.copyTo(output_mat);
 
-      Imgproc.threshold(process_mat, process_mat, thresh, 255, Imgproc.THRESH_BINARY);
+      if (junctionMode)
+         Imgproc.threshold(process_mat, process_mat, junctionThresh, 255, Imgproc.THRESH_BINARY_INV);
+      else
+         Imgproc.threshold(process_mat, process_mat, coneAimThresh, 255, Imgproc.THRESH_BINARY);
 
       if (thresh_img)
          process_mat.copyTo(output_mat);
@@ -152,5 +158,9 @@ public class XCYConeAimPipeline extends OpenCvPipeline {
 
    private int getDistance(Point pointA, Point pointB) {
       return (int) (Math.hypot(pointA.x - pointB.x, pointA.y - pointB.y));
+   }
+
+   public void setJunctionMode(boolean junctionMode) {
+      this.junctionMode = junctionMode;
    }
 }

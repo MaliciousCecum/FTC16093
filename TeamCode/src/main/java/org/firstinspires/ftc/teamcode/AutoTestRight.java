@@ -8,7 +8,7 @@ public class AutoTestRight extends AutoMaster{
    @Override
    public void runOpMode() throws InterruptedException{
       startSide = RIGHT;
-      firstJunctionPos = Junction.MIDDLE;
+      firstJunctionPos = Junction.SIDE_HIGH;
       initHardware();
       try {
          longMoveNormal();

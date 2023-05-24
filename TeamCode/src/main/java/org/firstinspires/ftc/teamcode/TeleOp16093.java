@@ -16,7 +16,7 @@ import com.qualcomm.robotcore.util.Range;
 @TeleOp
 public class TeleOp16093 extends LinearOpMode {
 
-   public static String KEY_CODE = "default";
+   public static String KEY_CODE = "XCY";
 
    private static final double max_turn_assist_power = 0.4;
    private NanoClock time;
@@ -27,8 +27,9 @@ public class TeleOp16093 extends LinearOpMode {
 
    public static final double x_static_compensation = 0.06;
    public static final double y_static_compensation = 0.06;
+   public static double webcamPower = 0.5;
 
-   private BasicMecanumDrive drive;
+   private AutoMecanumDrive drive;
    private Pose2d current_pos;
    //   private Vector2d cone_pos_vec = new Vector2d(50, -1200);
 //   private XCYBoolean to_last_eject;
@@ -49,8 +50,9 @@ public class TeleOp16093 extends LinearOpMode {
                  logic_period();
                  drive_period();
               });
-      drive = new BasicMecanumDrive(hardwareMap);
+      drive = new AutoMecanumDrive(hardwareMap);
       drive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+      drive.setJunctionMode(true);
 //      drive.getLocalizer().setPoseEstimate(get_pos_from_csv());
       holding = false;
       XCYBoolean arm_down;
@@ -59,23 +61,25 @@ public class TeleOp16093 extends LinearOpMode {
       XCYBoolean high_j;
       XCYBoolean low_j;
       XCYBoolean mid_j;
-      XCYBoolean cone_saveL;
       XCYBoolean cone_saveR;
       XCYBoolean setOriginal;
-      cone_saveL = new XCYBoolean(() -> gamepad1.back);
+      XCYBoolean intake_save;
       cone_saveR = new XCYBoolean(() -> gamepad1.start);
-
+      XCYBoolean color_detected = new XCYBoolean(() -> drive.isColorDetected());
+      XCYBoolean resetIntake = new XCYBoolean(()->gamepad1.touchpad&&gamepad1.triangle);
       switch (KEY_CODE) {
          case "XCY":
+            intake_save = new XCYBoolean(() -> gamepad1.share);
             arm_down = new XCYBoolean(() -> (gamepad1.cross || (gamepad1.right_bumper && sequence == Sequence.EMPTY_MIDDLE)) && !gamepad1.share);
             intake_action = new XCYBoolean(() -> (gamepad1.circle || (gamepad1.right_bumper && sequence == Sequence.EMPTY_DOWN)) && !gamepad1.share);
             upper_release = new XCYBoolean(() -> (gamepad1.square || (gamepad1.right_bumper && sequence == Sequence.HOLDING_UP)) && !gamepad1.share);
             high_j = new XCYBoolean(() -> (gamepad1.triangle || (gamepad1.right_bumper && sequence == Sequence.HOLDING_AWAIT)) && !gamepad1.share);
-            low_j = new XCYBoolean(() -> !gamepad1.share && (gamepad2.dpad_down || gamepad1.dpad_down));
-            mid_j = new XCYBoolean(() -> !gamepad1.share && (gamepad2.dpad_up || gamepad1.dpad_up));
-            setOriginal = new XCYBoolean(() -> gamepad1.touchpad);
+            low_j = new XCYBoolean(() -> !gamepad1.share && gamepad1.dpad_down);
+            mid_j = new XCYBoolean(() -> !gamepad1.share && gamepad1.dpad_up);
+            setOriginal = new XCYBoolean(() -> gamepad1.touchpad&&gamepad1.square);
             break;
          default:
+            intake_save = new XCYBoolean(() -> gamepad1.dpad_up);
             arm_down = new XCYBoolean(() -> gamepad1.right_bumper);
             intake_action = new XCYBoolean(() -> gamepad1.left_bumper);
             upper_release = new XCYBoolean(() -> gamepad1.x);
@@ -84,8 +88,6 @@ public class TeleOp16093 extends LinearOpMode {
             mid_j = new XCYBoolean(() -> gamepad1.b);
             setOriginal = new XCYBoolean(() -> gamepad1.back && gamepad1.x);
       }
-
-//      XCYBoolean reset_imu = new XCYBoolean(() -> gamepad1.share && gamepad1.square);
 
 //      to_last_eject = new XCYBoolean(() -> gamepad1.left_bumper && holding);
 
@@ -116,7 +118,7 @@ public class TeleOp16093 extends LinearOpMode {
 
       waitForStart();
       logic_period();
-      int intakeAimPosIndex = 0;
+      int intakeAimPosIndex = 4;
 //      lastEjectPos = current_pos;
 
       while (opModeIsActive()) {
@@ -124,6 +126,9 @@ public class TeleOp16093 extends LinearOpMode {
          logic_period();
          drive_period();
 
+         if (resetIntake.toTrue()){
+            upper.runtimeResetLifter();
+         }
 //         if (reset_imu.toFalse()) {
 //            drive.getLocalizer().setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
 //            drive.setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
@@ -132,29 +137,32 @@ public class TeleOp16093 extends LinearOpMode {
          if (cone_saveR.toTrue()) {
             upper.coneSaveR();
             upper.armChange(-0.1);
-            global_drive_power = 0.7;
-            global_drive_turn_ratio = 0.2;
+            global_drive_power = 0.55;
+            global_drive_turn_ratio = 0.3;
          } else if (cone_saveR.toFalse()) {
             upper.armChange(0.1);
          }
 
-         if (cone_saveL.toTrue()) {
-            upper.coneSaveL();
-            upper.armChange(-0.1);
-            global_drive_power = 0.7;
-            global_drive_turn_ratio = 0.2;
-         } else if (cone_saveL.toFalse()) {
-            upper.armChange(0.1);
+         if (intake_save.toTrue()) {
+            upper.intakeSave();
          }
 
          if (arm_down.toTrue()) {
             global_drive_power = 0.7;
             global_drive_turn_ratio = 0.3;
             upper.toAim();
-            intakeAimPosIndex = 0;
             upper.sleep_with_drive(300);
             holding = false;
             sequence = Sequence.EMPTY_DOWN;
+         }
+
+         if (color_detected.toTrue() && sequence == Sequence.EMPTY_DOWN) {
+            upper.grab();
+            holding = true;
+            sequence = Sequence.HOLDING_AWAIT;
+            gamepad1.runLedEffect(effect_holding);
+            global_drive_power = 1;
+            global_drive_turn_ratio = 1;
          }
 
          if (intake_action.toTrue()) {
@@ -176,9 +184,13 @@ public class TeleOp16093 extends LinearOpMode {
             if (mid_j.toTrue()) {
                intakeAimPosIndex = Range.clip(intakeAimPosIndex + 1, 0, 4);
                upper.toAim(intakeAimPosIndex);
+               global_drive_power = 0.7;
+               global_drive_turn_ratio = 0.3;
             } else if (low_j.toTrue()) {
                intakeAimPosIndex = Range.clip(intakeAimPosIndex - 1, 0, 4);
                upper.toAim(intakeAimPosIndex);
+               global_drive_power = 0.7;
+               global_drive_turn_ratio = 0.3;
             }
          } else {
             if (mid_j.toTrue() || low_j.toTrue() || high_j.toTrue()) {
@@ -202,49 +214,57 @@ public class TeleOp16093 extends LinearOpMode {
                   logic_period();
                   drive_period();
                }
-               while (!(upper_release.toTrue() || high_j.get() || mid_j.get() || low_j.get() || intake_action.get())) {
-                  logic_period();
-                  drive_period();
-               }
+//               while (!(upper_release.toTrue() || high_j.get() || mid_j.get() || low_j.get() || intake_action.get())) {
+//                  logic_period();
+//                  drive_period();
+//                  if (intake_save.toTrue()){
+//                     upper.intakeSave();
+//                  }
+//               }
                long startTime;
-               if (upper_release.get())
-                  do {
-                     while (!(upper_release.toTrue() || high_j.get() || mid_j.get() || low_j.get() || intake_action.get())) {
+//               if (upper_release.get())
+               do {
+                  while (!(upper_release.toTrue() || high_j.get() || mid_j.get() || low_j.get() || intake_action.get())) {
+                     logic_period();
+                     drive_webcam();
+                  }
+                  startTime = System.currentTimeMillis();
+                  if (upper_release.toTrue()) {
+                     upper.armChange(0.1);
+                     while (upper_release.get()) {
                         logic_period();
                         drive_period();
                      }
-                     startTime = System.currentTimeMillis();
-                     if (upper_release.toTrue()) {
-                        upper.armChange(0.1);
-                        while (upper_release.get()) {
-                           logic_period();
-                           drive_period();
-                        }
-                     }
-                     if (System.currentTimeMillis() - startTime > 450)
-                        upper.armChange(-0.1);
-                  } while (System.currentTimeMillis() - startTime > 450);
+                  }
+                  if (System.currentTimeMillis() - startTime > 450)
+                     upper.armChange(-0.1);
+               } while (System.currentTimeMillis() - startTime > 450);
             }
          }
 
          if (upper_release.toFalse()) {
             //x
-            if (holding) {
+            if (sequence == Sequence.HOLDING_AWAIT) {
+               upper.toGroundJunction();
+               sequence = Sequence.HOLDING_UP;
+            } else if (sequence == Sequence.HOLDING_UP) {
 //               lastEjectPos = current_pos;
                upper.openHand();
                upper.sleep_with_drive(350);
                upper.post_eject();
                upper.sleep_with_drive(100);
+               global_drive_turn_ratio = 1;
+               global_drive_power = 1;
+               holding = false;
+               sequence = Sequence.EMPTY_MIDDLE;
+               gamepad1.runLedEffect(effect_idle);
+               upper.toOrigional();
             } else {
-               upper.openHand();
+               upper.toOrigional();
+               global_drive_turn_ratio = 1;
+               global_drive_power = 1;
+               holding = false;
             }
-            global_drive_turn_ratio = 1;
-            global_drive_power = 1;
-            holding = false;
-            sequence = Sequence.EMPTY_MIDDLE;
-            gamepad1.runLedEffect(effect_idle);
-            upper.toOrigional();
-            upper.runtimeResetLifter();
          }
          if (setOriginal.toFalse()) {
             drive.getLocalizer().setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
@@ -281,6 +301,18 @@ public class TeleOp16093 extends LinearOpMode {
       }
       Pose2d power = (new Pose2d(x, y, turn_val * global_drive_turn_ratio)).times(global_drive_power);
 
+      drive.setGlobalPower(power, x_static_compensation, y_static_compensation);
+      drive.update();
+   }
+
+   private void drive_webcam() {
+      double x = -gamepad1.left_stick_y * 0.35 + -gamepad1.right_stick_y * 0.65;
+      double y = -gamepad1.left_stick_x * 0.35 + -gamepad1.right_stick_x * 0.65;
+      double turn_val = (gamepad1.left_trigger - gamepad1.right_trigger);
+      if (Math.abs(turn_val) < 0.001) {
+         turn_val = drive.getOffSet() / 250 * webcamPower;
+      }
+      Pose2d power = (new Pose2d(x, y, turn_val * global_drive_turn_ratio)).times(global_drive_power);
       drive.setGlobalPower(power, x_static_compensation, y_static_compensation);
       drive.update();
    }

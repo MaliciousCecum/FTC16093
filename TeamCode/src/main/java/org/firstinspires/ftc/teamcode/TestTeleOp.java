@@ -37,7 +37,7 @@ public class TestTeleOp extends LinearOpMode {
       Pose2d drive_pos = new Pose2d();
       drive.setPoseEstimate(new Pose2d(0, 0, 0));
       while (opModeIsActive()) {
-         if (gamepad2.start && drive.isDetected()) {
+         if (gamepad2.start && drive.isWebcamDetected()) {
             drive.lineFollowPeriod(gamepad2.left_stick_y*-0.25);
          } else {
             double x = -gamepad1.left_stick_y;

@@ -27,6 +27,7 @@ public class AutoMecanumDrive extends BasicMecanumDrive {
 
    public AutoMecanumDrive(HardwareMap hardwareMap) {
       super(hardwareMap);
+      //TODO
       int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
       webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
       pipeline = new XCYAimPipeline();
@@ -52,11 +53,13 @@ public class AutoMecanumDrive extends BasicMecanumDrive {
       pipeline.setSideRed(red);
    }
 
+   //TODO
+
    public void setJunctionMode(boolean junction){
       pipeline.setJunctionMode(junction);
    }
 
-   public boolean isDetected(){
+   public boolean isWebcamDetected(){
       return pipeline.isDetected();
    }
 

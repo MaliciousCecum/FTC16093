@@ -24,6 +24,7 @@ public class XCYPipelineTest extends LinearOpMode {
     public static int wb = 4200;
 
     public static boolean isRed = false;
+    public static boolean junctionMode = false;
     public static final int WIDTH = 640;
     public static final int HEIGHT = 480;
 
@@ -50,6 +51,7 @@ public class XCYPipelineTest extends LinearOpMode {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetry.update();
         pipeline.setSideRed(isRed);
+        pipeline.setJunctionMode(junctionMode);
         FtcDashboard.getInstance().startCameraStream(webcam, 10);
         waitForStart();
         webcam.getExposureControl().setMode(ExposureControl.Mode.Manual);
@@ -76,7 +78,6 @@ public class XCYPipelineTest extends LinearOpMode {
             webcam.getGainControl().setGain(gain);
             webcam.getExposureControl().setExposure(exposure_time, TimeUnit.MILLISECONDS);
             webcam.getWhiteBalanceControl().setWhiteBalanceTemperature(wb);
-            pipeline.setSideRed(isRed);
             sleep(10);
             last_gain = gain;
             last_exp_time = exposure_time;

@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public abstract class AutoMaster extends LinearOpMode {
 
    public enum Junction {
-      HIGH, MIDDLE
+      SIDE_HIGH, MIDDLE_HIGH, LOW
    }
 
    private ElapsedTime runtime;
@@ -96,13 +96,13 @@ public abstract class AutoMaster extends LinearOpMode {
               this,
               drive::update
       );
-      upper.setArm(0.36);
+      upper.toSeeJunction();
       upper.setSideIsRed(side_color);
       telemetry.addLine("init: trajectory");
       telemetry.update();
-      if (firstJunctionPos == Junction.HIGH) {
+      if (firstJunctionPos == Junction.SIDE_HIGH) {
          startToEject = drive.trajectoryBuilder(startPos)
-                 .lineToLinearHeading(new Pose2d(x_axis-300, 900 * startSide, 0))
+                 .lineToLinearHeading(new Pose2d(x_axis - 300, 900 * startSide, 0))
                  .splineToSplineHeading(new Pose2d(x_axis, 550 * startSide, Math.toRadians(-90) * startSide), Math.toRadians(-90) * startSide)
                  .splineToSplineHeading(MIDDLE_EJECT_FIRST_POS, MIDDLE_EJECT_FIRST_POS.getHeading())
                  .build();
@@ -140,7 +140,7 @@ public abstract class AutoMaster extends LinearOpMode {
       if (isStopRequested()) return;
       upper.closeHand();
       drive.followTrajectoryAsync(startToEject);
-      if (firstJunctionPos == Junction.HIGH) {
+      if (firstJunctionPos == Junction.SIDE_HIGH) {
          while (opModeIsActive() && Math.abs(drive.getPoseEstimate().getY() - MIDDLE_EJECT_FIRST_POS.getY()) > 150) {
             drive.update();
          }
@@ -158,71 +158,64 @@ public abstract class AutoMaster extends LinearOpMode {
 
    protected void intake(int index, Junction lastJunction) throws Exception {
       drive.setSimpleMovePower(0.5);
-
-      if (lastJunction == Junction.HIGH) {
-         upper.toOrigional();
-         drive.initSimpleMove(new Pose2d(x_axis, drive.getSimpleMovePosition().getY(), Math.toRadians(90)*startSide));
-         drive.waitForIdle();
-      }
-      drive.setSimpleMovePower(0.7);
-      drive.initSimpleMove(GRAB_POS);
-      upper.toAim(index);
-      while (drive.isBusy()) {
-         drive.update();
-//         if (runtime.seconds() > 28.5) throw new GlobalTimeoutException();
-      }
-      drive.moveForTime(200);
-
-
+      upper.toSeeJunction();
+      //手放到可以看摄像头的地方
+      drive.initSimpleMove(new Pose2d(x_axis, drive.getSimpleMovePosition().getY(), Math.toRadians(90) * startSide));
+      //让车回到x中轴线上，y按照之前的
+      drive.waitForIdle();
+      drive.moveForTime(200);//停稳
       drive.stopSimpleMove();
-      drive.setDrivePower(new Pose2d(0, 0, 0));
+      while (drive.getPoseEstimate().getY()*startSide<1100) {
+         drive.update();//持续更新车的位置
+         drive.lineFollowPeriod(0.5);
+      }
+      upper.toAim(index);//把手放到合适位置
+      drive.setDrivePower(new Pose2d(0, 0.25, 0));
+      while (!drive.isColorDetected()) {
+         drive.update();
+      }
+      drive.getLocalizer().setPoseEstimate(new Pose2d(GRAB_POS.vec(),drive.getPoseEstimate().getHeading()));
+      drive.initSimpleMove(GRAB_POS);
+      drive.moveForTime(150);
       if (cone_index < 2) {
-         upper.closeHand();
-         drive.setDrivePower(new Pose2d(-0.2, 0, 0));
-         drive.moveForTime(250);
+         upper.closeHand();//夹起
+         drive.stopSimpleMove();
+         drive.setDrivePower(new Pose2d(-0.3, 0, 0));
+         drive.moveForTime(200);//后退
          upper.setArm(0.36);
-      } else upper.grab();
-      drive.setDrivePower(new Pose2d(-0.2, 0, 0));
-      drive.moveForTime(200);
+      } else upper.verticalGrab();
    }
 
    protected void moveToEject() {
-      drive.setSimpleMovePower(0.7);
-      drive.initSimpleMove(new Pose2d(x_axis, 950 * startSide, Math.toRadians(90)*startSide));
+      drive.setSimpleMovePower(1);
+      drive.initSimpleMove(new Pose2d(x_axis, 950 * startSide, Math.toRadians(90) * startSide));
       drive.waitForIdle();
-      drive.setSimpleMovePower(0.4);
+      drive.setSimpleMovePower(0.7);
       drive.initSimpleMove(MIDDLE_EJECT_FIRST_POS);
       upper.toHighJunction();
       drive.waitForIdle();
-      drive.moveForTime(200);
    }
 
    protected void eject(Junction pos, int stable_time) throws Exception {
-//      if (runtime.seconds() > 28.8) throw new GlobalTimeoutException();
       drive.moveForTime(stable_time);
       upper.armChange(0.1);
-      drive.moveForTime(150);
+      drive.moveForTime(100);
       upper.openHand();
       drive.moveForTime(200);
       upper.post_eject();
-      drive.moveForTime(200);
-//      if (runtime.seconds() > 28.5) throw new GlobalTimeoutException();
+      drive.moveForTime(100);
    }
 
    protected void intakeSave() throws Exception {
+      drive.stopSimpleMove();
+      drive.setDrivePower(new Pose2d(0.2));
       drive.moveForTime(200);
       upper.grab();
    }
 
-   //倾覆
-   private void tiltSave() throws InterruptedException {
-      drive.setDrivePower(new Pose2d());
-      drive.stopTrajectory();
-      drive.update();
-      throw new InterruptedException();
-   }
-
-   //停靠，起始位置x=1380
+   /**
+    * 停靠
+    */
    protected void park() {
       Pose2d endPos;
       if (startSide == RIGHT) {

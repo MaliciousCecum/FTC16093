@@ -24,6 +24,7 @@ import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryAcceleration
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryVelocityConstraint;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -70,6 +71,7 @@ public class BasicMecanumDrive extends MecanumDrive {
    private final List<DcMotorEx> motors;
 
    private final BNO055IMU imu;
+   private final ColorSensor color;
    private final VoltageSensor batteryVoltageSensor;
    private List<LynxModule> allHubs;
 
@@ -101,7 +103,7 @@ public class BasicMecanumDrive extends MecanumDrive {
       leftBack = hardwareMap.get(DcMotorEx.class, "lb");
       rightBack = hardwareMap.get(DcMotorEx.class, "rb");
       rightFront = hardwareMap.get(DcMotorEx.class, "rf");
-
+      color = hardwareMap.get(ColorSensor.class, "color");
       leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
       leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
       rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -392,5 +394,9 @@ public class BasicMecanumDrive extends MecanumDrive {
       telemetry.addData("Right Front", rightFront.getCurrentPosition());
       telemetry.addData("Right Back", rightBack.getCurrentPosition());
       telemetry.update();
+   }
+
+   public boolean isColorDetected(){
+     return (color.alpha()>200);
    }
 }

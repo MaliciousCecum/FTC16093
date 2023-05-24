@@ -9,7 +9,7 @@ public class AutoTest extends AutoMaster{
    @Override
    public void runOpMode() throws InterruptedException{
       startSide = LEFT;
-      firstJunctionPos = Junction.HIGH;
+      firstJunctionPos = Junction.SIDE_HIGH;
       initHardware();
       try {
          longMoveNormal();

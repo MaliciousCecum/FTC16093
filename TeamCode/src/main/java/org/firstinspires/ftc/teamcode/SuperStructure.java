@@ -10,15 +10,14 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 @Config
 public class SuperStructure {
-   public static double ARM_INTAKE = 0.68;
+   public static double ARM_INTAKE = 0.71;
    public static double ARM_FRONT = 0.49;
    public static double ARM_MIDDLE = 0.36;
-   public static double AMR_EJECT_PUSH = 0.;
 
    public static int LIFT_MIN = 0;
    public static int LIFT_LOW = 350;
    public static int LIFT_MID = 850;
-   public static int LIFT_HIGH = 1350;
+   public static int LIFT_HIGH = 1325;
    public static int LIFT_ADD_PER_CONE = 50;
 
    public static final int LIFT_TOLERANCE = 15;
@@ -55,7 +54,7 @@ public class SuperStructure {
       liftLocation = 0;
       setLifterPosition(LIFT_MIN, 1);
       setArm(ARM_MIDDLE);
-      while (Math.abs(getLifterPos() - LIFT_MIN) > LIFT_TOLERANCE && opMode.opModeIsActive()) {
+      while (getLifterPos() > LIFT_MID && opMode.opModeIsActive()) {
          drive_period.run();
       }
    }
@@ -64,7 +63,7 @@ public class SuperStructure {
       setLifterPower(-0.2);
       sleep_with_drive(200);
       setLifterPower(0);
-      sleep_with_drive(100);
+      sleep_with_drive(50);
       setLifterPower(0);
       liftMotorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
       liftMotorRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -75,8 +74,8 @@ public class SuperStructure {
       liftLocation = 0;
       setArm(ARM_INTAKE);
       openHand();
-      sleep_with_drive(50);
       setLifterPosition(LIFT_MIN, 1);
+      sleep_with_drive(100);
    }
 
    public void toAim(int index) {
@@ -84,6 +83,7 @@ public class SuperStructure {
       setArm(ARM_INTAKE);
       openHand();
       setLifterPosition(index * LIFT_ADD_PER_CONE, 1);
+      sleep_with_drive(100);
    }
 
    public void toGroundJunction() {
@@ -122,11 +122,45 @@ public class SuperStructure {
       setArm(ARM_FRONT);
    }
 
-   public void grab() {
-      if (opMode.isStopRequested()) return;
-      closeHand();
-      sleep_with_drive(350);
+   /**
+    *  抬起滑轨，露出摄像头
+    */
+   public void toSeeJunction() {
       setArm(ARM_MIDDLE);
+      setLifterPosition(200, 1);
+      while (Math.abs(getLifterPos() - 200) > LIFT_TOLERANCE && opMode.opModeIsActive()) {
+         drive_period.run();
+      }
+      openHand();
+   }
+
+   /**
+    * 夹取
+    */
+   public void grab() {
+      closeHand();
+      sleep_with_drive(150);
+      setArm(ARM_MIDDLE);
+   }
+
+   public void verticalGrab(){
+      closeHand();
+      sleep_with_drive(150);
+      setLifterPosition((int)getLifterPos()+200,1);
+      while (Math.abs(getLifterPos() - 200) > LIFT_TOLERANCE && opMode.opModeIsActive()) {
+         drive_period.run();
+      }
+      setArm(ARM_MIDDLE);
+   }
+
+   public void intakeSave(){
+      armChange(-0.05);
+      sleep_with_drive(80);
+      openHand();
+      sleep_with_drive(40);
+      armChange(0.05);
+      sleep_with_drive(50);
+      closeHand();
    }
 
    public void openHand() {
@@ -135,8 +169,8 @@ public class SuperStructure {
    }
 
    public void closeHand() {
-      leftClaw.setPosition(0.51+0.02);
-      rightClaw.setPosition(0.56-0.02);
+      leftClaw.setPosition(0.51 + 0.02);
+      rightClaw.setPosition(0.56 - 0.02);
    }
 
    public void coneSaveR() {

@@ -20,7 +20,6 @@ public abstract class AutoMaster extends LinearOpMode {
    public static final int RIGHT = -1;
    public static final int LEFT = 1;
    public static boolean DEBUG = true;
-   public static int startTimeDelay = 300, cycleDelay = -1;
 
    public static final boolean RED = true;
    public static final boolean BLUE = false;
@@ -49,7 +48,7 @@ public abstract class AutoMaster extends LinearOpMode {
    };
    Trajectory startToEject;
 
-   Pose2d MIDDLE_EJECT_FIRST_POS, GRAB_POS, SIDE_POS, startPos;
+   Pose2d MIDDLE_FIRST_EJECT_POS, MIDDLE_EJECT_POS, GRAB_POS, SIDE_EJECT_POS, SIDE_FIRST_EJECT_POS, startPos;
 
    int end_pos_index;
    protected int cone_index;
@@ -58,25 +57,15 @@ public abstract class AutoMaster extends LinearOpMode {
 //      PhotonCore.enable();
       telemetry.addLine("init: webcam");
       telemetry.update();
-//      OpenCvWebcam webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"),
-//              hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName()));
-//      AutoDetectionPipeline pipeline = new AutoDetectionPipeline(0.045, 578.272, 578.272, 402.145, 221.506);
-//      webcam.setPipeline(pipeline);
-//      webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
-//         @Override
-//         public void onOpened() {
-//            webcam.startStreaming(1280, 720, OpenCvCameraRotation.UPRIGHT);
-//         }
-//
-//         @Override
-//         public void onError(int errorCode) {
-//         }
-//      });
-      MIDDLE_EJECT_FIRST_POS = new Pose2d(1200, 174 * startSide, Math.toRadians(-125) * startSide);
+      AutoDetectionPipeline pipeline = new AutoDetectionPipeline(0.045, 578.272, 578.272, 402.145, 221.506);
+      drive.webcam.setPipeline(pipeline);
 
-      GRAB_POS = new Pose2d(x_axis, 1460 * startSide, Math.toRadians(90) * startSide);
+      MIDDLE_FIRST_EJECT_POS = new Pose2d(x_axis - 60, 110 * startSide, Math.toRadians(-135) * startSide);
+      MIDDLE_EJECT_POS = new Pose2d(x_axis - 160, 0, Math.toRadians(180) * startSide);
+      GRAB_POS = new Pose2d(x_axis, 1500 * startSide, Math.toRadians(90) * startSide);
 
-      SIDE_POS = new Pose2d(x_axis, 995 * startSide, Math.toRadians(91.7) * startSide);
+      SIDE_EJECT_POS = new Pose2d(x_axis + 160, 600 * startSide, Math.toRadians(0) * startSide);
+      SIDE_FIRST_EJECT_POS = new Pose2d(x_axis + 150, 760 * startSide, Math.toRadians(-45) * startSide);
       startPos = new Pose2d(0, 900 * startSide, 0);
       end_pos_index = 0;
 //      FtcDashboard.getInstance().startCameraStream(webcam, 10);
@@ -89,7 +78,7 @@ public abstract class AutoMaster extends LinearOpMode {
       drive.getLocalizer().setPoseEstimate(startPos);
       drive.update();
       drive.getLocalizer().setPoseEstimate(startPos);
-      drive.setSimpleMoveTolerance(30, Math.toRadians(10));
+      drive.setSimpleMoveTolerance(50, Math.toRadians(3));
       telemetry.addLine("init: superstructure");
       telemetry.update();
       upper = new SuperStructure(
@@ -100,15 +89,16 @@ public abstract class AutoMaster extends LinearOpMode {
       upper.setSideIsRed(side_color);
       telemetry.addLine("init: trajectory");
       telemetry.update();
-      if (firstJunctionPos == Junction.SIDE_HIGH) {
+      if (firstJunctionPos == Junction.MIDDLE_HIGH) {
          startToEject = drive.trajectoryBuilder(startPos)
                  .lineToLinearHeading(new Pose2d(x_axis - 300, 900 * startSide, 0))
                  .splineToSplineHeading(new Pose2d(x_axis, 550 * startSide, Math.toRadians(-90) * startSide), Math.toRadians(-90) * startSide)
-                 .splineToSplineHeading(MIDDLE_EJECT_FIRST_POS, MIDDLE_EJECT_FIRST_POS.getHeading())
+                 .splineToSplineHeading(MIDDLE_FIRST_EJECT_POS, MIDDLE_FIRST_EJECT_POS.getHeading())
                  .build();
       } else {
          startToEject = drive.trajectoryBuilder(startPos)
-                 .lineToSplineHeading(SIDE_POS)
+                 .lineToLinearHeading(new Pose2d(x_axis - 300, 900 * startSide, 0))
+                 .splineToSplineHeading(SIDE_FIRST_EJECT_POS, SIDE_FIRST_EJECT_POS.getHeading())
                  .build();
       }
       telemetry.addLine("init: pipeline");
@@ -136,76 +126,103 @@ public abstract class AutoMaster extends LinearOpMode {
 //      });
    }
 
-   protected void longMoveNormal() throws Exception {
+   protected void longMoveNormal(int stableTime) throws Exception {
       if (isStopRequested()) return;
       upper.closeHand();
-      drive.followTrajectoryAsync(startToEject);
-      if (firstJunctionPos == Junction.SIDE_HIGH) {
-         while (opModeIsActive() && Math.abs(drive.getPoseEstimate().getY() - MIDDLE_EJECT_FIRST_POS.getY()) > 150) {
+      if (firstJunctionPos == Junction.MIDDLE_HIGH) {
+         drive.followTrajectoryAsync(startToEject);
+         while (opModeIsActive() && Math.abs(drive.getPoseEstimate().getY() - MIDDLE_FIRST_EJECT_POS.getY()) > 150) {
             drive.update();
          }
          upper.toHighJunction();
          drive.waitForIdle();
-         drive.initSimpleMove(MIDDLE_EJECT_FIRST_POS);
-         drive.waitForIdle();
+         drive.initSimpleMove(MIDDLE_FIRST_EJECT_POS);
       } else {
+         drive.initSimpleMove(new Pose2d(x_axis, startPos.getY()));
          while (opModeIsActive() && drive.getPoseEstimate().getX() < 900) {
             drive.update();
          }
+         drive.initSimpleMove(SIDE_FIRST_EJECT_POS);
+         upper.toHighJunction();
+         upper.guideOut();
       }
-      drive.moveForTime(startTimeDelay);
+      drive.waitForIdle();
+      drive.moveForTime(stableTime);
    }
 
    protected void intake(int index, Junction lastJunction) throws Exception {
       drive.setSimpleMovePower(0.5);
-      upper.toSeeJunction();
       //手放到可以看摄像头的地方
-      drive.initSimpleMove(new Pose2d(x_axis, drive.getSimpleMovePosition().getY(), Math.toRadians(90) * startSide));
+      drive.initSimpleMove(new Pose2d(x_axis, drive.getSimpleMovePosition().getY() + 200 * startSide, Math.toRadians(90) * startSide));
+      drive.setRed(side_color);
+      upper.toSeeJunction();
       //让车回到x中轴线上，y按照之前的
       drive.waitForIdle();
-      drive.moveForTime(200);//停稳
       drive.stopSimpleMove();
-      while (drive.getPoseEstimate().getY()*startSide<1100) {
-         drive.update();//持续更新车的位置
-         drive.lineFollowPeriod(0.5);
+      while (lastJunction == Junction.SIDE_HIGH && drive.getPoseEstimate().getY() * startSide < 360) {
+         drive.update();
+         drive.setDrivePower(new Pose2d(0.3));
       }
+      while (drive.getPoseEstimate().getY() * startSide < 1250) {
+         drive.update();//持续更新车的位置
+         if (drive.isWebcamDetected())
+            drive.lineFollowPeriod(0.5);
+         else
+            drive.setDrivePower(new Pose2d(0.15));
+      }
+      drive.initSimpleMove(drive.getPoseEstimate());
       upper.toAim(index);//把手放到合适位置
-      drive.setDrivePower(new Pose2d(0, 0.25, 0));
+      drive.stopSimpleMove();
+      drive.setDrivePower(new Pose2d(0.1));
       while (!drive.isColorDetected()) {
          drive.update();
       }
-      drive.getLocalizer().setPoseEstimate(new Pose2d(GRAB_POS.vec(),drive.getPoseEstimate().getHeading()));
-      drive.initSimpleMove(GRAB_POS);
-      drive.moveForTime(150);
-      if (cone_index < 2) {
-         upper.closeHand();//夹起
-         drive.stopSimpleMove();
-         drive.setDrivePower(new Pose2d(-0.3, 0, 0));
-         drive.moveForTime(200);//后退
-         upper.setArm(0.36);
-      } else upper.verticalGrab();
+      drive.setDrivePower(new Pose2d());
+      drive.moveForTime(100);
+      drive.getLocalizer().setPoseEstimate(new Pose2d(GRAB_POS.vec(), drive.getPoseEstimate().getHeading()));
+      drive.stopSimpleMove();
+      drive.setDrivePower(new Pose2d());
+      upper.grab();
    }
 
-   protected void moveToEject() {
-      drive.setSimpleMovePower(1);
-      drive.initSimpleMove(new Pose2d(x_axis, 950 * startSide, Math.toRadians(90) * startSide));
-      drive.waitForIdle();
+   protected void moveToEject(Junction targetJunction) throws InterruptedException {
       drive.setSimpleMovePower(0.7);
-      drive.initSimpleMove(MIDDLE_EJECT_FIRST_POS);
-      upper.toHighJunction();
+      drive.setJunctionMode();
+      if (targetJunction == Junction.MIDDLE_HIGH) {
+         drive.initSimpleMove(new Pose2d(x_axis, 300 * startSide, Math.toRadians(90) * startSide));
+         while (drive.getPoseEstimate().getY() * startSide > 900) {
+            drive.update();
+         }
+         drive.setSimpleMovePower(0.6);
+         drive.initSimpleMove(new Pose2d(x_axis, 0, Math.toRadians(180) * startSide));
+         upper.toHighJunction();
+         drive.waitForIdle();
+         drive.initSimpleMove(MIDDLE_EJECT_POS);
+      } else {
+         drive.initSimpleMove(new Pose2d(x_axis, 600 * startSide, Math.toRadians(0) * startSide));
+         upper.toHighJunction();
+         drive.waitForIdle();
+         drive.initSimpleMove(SIDE_EJECT_POS);
+      }
+      upper.guideOut();
+      drive.setSimpleMoveTolerance(25, Math.toRadians(5));
       drive.waitForIdle();
+      drive.setSimpleMoveTolerance(70, Math.toRadians(15));
    }
 
-   protected void eject(Junction pos, int stable_time) throws Exception {
+   protected void eject(int stable_time) throws Exception {
       drive.moveForTime(stable_time);
       upper.armChange(0.1);
-      drive.moveForTime(100);
+      upper.guideBack();
+      drive.moveForTime(60);
       upper.openHand();
-      drive.moveForTime(200);
-      upper.post_eject();
       drive.moveForTime(100);
+      upper.post_eject();
    }
 
+   /**
+    * intake超时执行
+    */
    protected void intakeSave() throws Exception {
       drive.stopSimpleMove();
       drive.setDrivePower(new Pose2d(0.2));
@@ -228,6 +245,9 @@ public abstract class AutoMaster extends LinearOpMode {
       drive.moveForTime(200);
    }
 
+   /**
+    * 坐标存入SCV文件
+    */
    protected void savePosition() {
       save_pos_in_csv(drive.getPoseEstimate());
    }

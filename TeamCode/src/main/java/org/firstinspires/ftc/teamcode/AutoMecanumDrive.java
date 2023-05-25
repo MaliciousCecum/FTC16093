@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.Configurations.clamp;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
@@ -10,6 +12,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.WhiteBalanceControl;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.OpenCVTest.XCYAimPipeline;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -27,7 +30,6 @@ public class AutoMecanumDrive extends BasicMecanumDrive {
 
    public AutoMecanumDrive(HardwareMap hardwareMap) {
       super(hardwareMap);
-      //TODO
       int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
       webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
       pipeline = new XCYAimPipeline();
@@ -51,12 +53,14 @@ public class AutoMecanumDrive extends BasicMecanumDrive {
 
    public void setRed(boolean red) {
       pipeline.setSideRed(red);
+      webcam.setPipeline(pipeline);
    }
 
    //TODO
 
-   public void setJunctionMode(boolean junction){
-      pipeline.setJunctionMode(junction);
+   public void setJunctionMode(){
+      pipeline.openJunctionMode();
+      webcam.setPipeline(pipeline);
    }
 
    public boolean isWebcamDetected(){
@@ -72,6 +76,14 @@ public class AutoMecanumDrive extends BasicMecanumDrive {
               powerX,
               0,
               lfPID.update(-pipeline.getOffset()/250)
+      ));
+   }
+
+   public void lineFollowPeriodImu(double powerX, double rotation){
+      setDrivePower(new Pose2d(
+              powerX,
+              clamp(lfPID.update(-pipeline.getOffset()/250),0.35),
+              clamp(Math.toDegrees(AngleUnit.normalizeRadians(rotation-getPoseEstimate().getHeading())) * 0.08,1)*0.5
       ));
    }
 }

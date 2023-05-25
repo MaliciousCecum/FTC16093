@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 @TeleOp
 @Config
 public class XCYPipelineTest extends LinearOpMode {
-    public static int exposure_time = 23;
+    public static int exposure_time = 24;
     public static int gain = 0;
     public static int wb = 4200;
 
@@ -51,7 +51,7 @@ public class XCYPipelineTest extends LinearOpMode {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetry.update();
         pipeline.setSideRed(isRed);
-        pipeline.setJunctionMode(junctionMode);
+        pipeline.openJunctionMode();
         FtcDashboard.getInstance().startCameraStream(webcam, 10);
         waitForStart();
         webcam.getExposureControl().setMode(ExposureControl.Mode.Manual);

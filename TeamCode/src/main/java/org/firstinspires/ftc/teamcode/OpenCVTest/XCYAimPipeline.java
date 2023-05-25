@@ -31,8 +31,6 @@ public class XCYAimPipeline extends OpenCvPipeline {
    public static int blur_pix = 5;
    public static int min_detect_area = 500;
 
-   private boolean DEBUG = false;
-
    private boolean isSideRed = false;
    private boolean junctionMode = false;
 
@@ -41,9 +39,6 @@ public class XCYAimPipeline extends OpenCvPipeline {
    public static boolean contour = false;
    public static boolean data = false;
 
-   public void setDEBUG(boolean b) {
-      DEBUG = b;
-   }
 
    public void setSideRed(boolean isRed) {
       isSideRed = isRed;
@@ -114,21 +109,23 @@ public class XCYAimPipeline extends OpenCvPipeline {
             RotatedRect rec = Imgproc.minAreaRect(new MatOfPoint2f(contoursList.get(c).toArray()));
             Point[] boxPoints = new Point[4];
             rec.points(boxPoints);
-
-            Point pointA = midpoint(boxPoints[0], boxPoints[1]);
-            Point pointB = midpoint(boxPoints[1], boxPoints[2]);
-            Point pointC = midpoint(boxPoints[2], boxPoints[3]);
-            Point pointD = midpoint(boxPoints[3], boxPoints[0]);
-            if (getDistance(pointA, pointC) > getDistance(pointB, pointD))
-               Imgproc.line(output_mat, pointA, pointC, new Scalar(isSideRed ? 0 : 255, 0, isSideRed ? 255 : 0));
-            else
-               Imgproc.line(output_mat, pointB, pointD, new Scalar(isSideRed ? 0 : 255, 0, isSideRed ? 255 : 0));
-
-            for (int i = 0; i <= 3; i++) {
-               Imgproc.line(output_mat, boxPoints[i], boxPoints[(i + 1) % 4], new Scalar(0, 255, 0));
+            if (c == 0) {
+               Imgproc.line(output_mat,new Point(rec.center.x,0),new Point(rec.center.x,480),new Scalar(127, 255, 0));
+               Imgproc.line(output_mat,new Point(0,rec.center.y),new Point(640,rec.center.y),new Scalar(127, 255, 0));
             }
-            Imgproc.putText(output_mat, "i=" + c + ",a=" + area + ",(" + getDistance(pointA, pointC) + "," + getDistance(pointD, pointB) + ")",
+            Point junctionTextPos = new Point(500, 200);
+            Point coneStackTextPos = new Point(500, 280);
+            for (int i = 0; i <= 3; i++) {
+               if (c == 0) {
+                  Imgproc.line(output_mat, boxPoints[i], boxPoints[(i + 1) % 4], new Scalar(127, 255, 0), 1);
+                  Imgproc.line(output_mat, boxPoints[i], junctionMode ? junctionTextPos : coneStackTextPos, new Scalar(127, 255, 0), 2);
+               }
+               Imgproc.line(output_mat, boxPoints[i], boxPoints[(i + 1) % 4], new Scalar(150, 150, 150));
+            }
+            Imgproc.putText(output_mat, "i=" + c + ",a=" + area,
                     boxPoints[2], Imgproc.FONT_HERSHEY_COMPLEX, 0.5, new Scalar(0, 0, 255));
+            Imgproc.putText(output_mat, "连接点", junctionTextPos, Imgproc.FONT_HERSHEY_PLAIN, 2, new Scalar(127, 255, 0));
+            Imgproc.putText(output_mat, "锥筒", coneStackTextPos, Imgproc.FONT_HERSHEY_PLAIN, 2, new Scalar(127, 255, 0));
          }
       }
       return output_mat;
@@ -160,7 +157,7 @@ public class XCYAimPipeline extends OpenCvPipeline {
       return (int) (Math.hypot(pointA.x - pointB.x, pointA.y - pointB.y));
    }
 
-   public void setJunctionMode(boolean junctionMode) {
-      this.junctionMode = junctionMode;
+   public void openJunctionMode() {
+      this.junctionMode = true;
    }
 }

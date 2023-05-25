@@ -11,19 +11,19 @@ import com.qualcomm.robotcore.hardware.Servo;
 @Config
 public class SuperStructure {
    public static double ARM_INTAKE = 0.71;
-   public static double ARM_FRONT = 0.49;
+   public static double ARM_FRONT = 0.47;
    public static double ARM_MIDDLE = 0.36;
 
    public static int LIFT_MIN = 0;
    public static int LIFT_LOW = 350;
    public static int LIFT_MID = 850;
-   public static int LIFT_HIGH = 1325;
+   public static int LIFT_HIGH = 1260;
    public static int LIFT_ADD_PER_CONE = 50;
 
    public static final int LIFT_TOLERANCE = 15;
 
    private final DcMotorEx liftMotorLeft, liftMotorRight;
-   private final Servo leftClaw, rightClaw, arm;
+   private final Servo leftClaw, rightClaw, arm,guide;
    private Runnable drive_period;
    private final LinearOpMode opMode;
 
@@ -48,6 +48,7 @@ public class SuperStructure {
       leftClaw = hardwareMap.get(Servo.class, "leftClaw");
       rightClaw = hardwareMap.get(Servo.class, "rightClaw");
       arm = hardwareMap.get(Servo.class, "hand");
+      guide = hardwareMap.get(Servo.class,"guide");
    }
 
    public void toOrigional() {
@@ -123,7 +124,7 @@ public class SuperStructure {
    }
 
    /**
-    *  抬起滑轨，露出摄像头
+    * 抬起滑轨，露出摄像头
     */
    public void toSeeJunction() {
       setArm(ARM_MIDDLE);
@@ -143,17 +144,18 @@ public class SuperStructure {
       setArm(ARM_MIDDLE);
    }
 
-   public void verticalGrab(){
+   public void verticalGrab() {
       closeHand();
       sleep_with_drive(150);
-      setLifterPosition((int)getLifterPos()+200,1);
-      while (Math.abs(getLifterPos() - 200) > LIFT_TOLERANCE && opMode.opModeIsActive()) {
+      int target = (int) getLifterPos() + 250;
+      setLifterPosition(target, 1);
+      while (Math.abs(getLifterPos() - target) > LIFT_TOLERANCE && opMode.opModeIsActive()) {
          drive_period.run();
       }
       setArm(ARM_MIDDLE);
    }
 
-   public void intakeSave(){
+   public void intakeSave() {
       armChange(-0.05);
       sleep_with_drive(80);
       openHand();
@@ -240,5 +242,13 @@ public class SuperStructure {
       while (opMode.opModeIsActive() && System.currentTimeMillis() - start_time < time_mm) {
          drive_period.run();
       }
+   }
+
+   public void guideOut(){
+      guide.setPosition(0.23);
+   }
+
+   public void guideBack(){
+      guide.setPosition(0.56);
    }
 }

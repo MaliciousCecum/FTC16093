@@ -19,68 +19,69 @@ import java.util.concurrent.TimeUnit;
 @TeleOp
 @Config
 public class XCYPipelineTest extends LinearOpMode {
-    public static int exposure_time = 24;
-    public static int gain = 0;
-    public static int wb = 4200;
+   public static int exposure_time = 24;
+   public static int gain = 0;
+   public static int wb = 4200;
 
-    public static boolean isRed = false;
-    public static boolean junctionMode = false;
-    public static final int WIDTH = 640;
-    public static final int HEIGHT = 480;
+   public static boolean isRed = false;
+   public static boolean junctionMode = false;
+   public static final int WIDTH = 640;
+   public static final int HEIGHT = 480;
 
-    OpenCvWebcam webcam;
-    XCYAimPipeline pipeline;
+   OpenCvWebcam webcam;
+   XCYAimPipeline pipeline;
 
-    @Override
-    public void runOpMode() {
+   @Override
+   public void runOpMode() {
 
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-        pipeline = new XCYAimPipeline();
-        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
-            @Override
-            public void onOpened() {
-                webcam.setPipeline(pipeline);
-                webcam.startStreaming(WIDTH, HEIGHT, OpenCvCameraRotation.UPSIDE_DOWN);
-            }
+      int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+      webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
+      pipeline = new XCYAimPipeline();
+      webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
+         @Override
+         public void onOpened() {
+            webcam.setPipeline(pipeline);
+            webcam.startStreaming(WIDTH, HEIGHT, OpenCvCameraRotation.UPSIDE_DOWN);
+         }
 
-            @Override
-            public void onError(int errorCode) {
-            }
-        });
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        telemetry.update();
-        pipeline.setSideRed(isRed);
-        pipeline.openJunctionMode();
-        FtcDashboard.getInstance().startCameraStream(webcam, 10);
-        waitForStart();
-        webcam.getExposureControl().setMode(ExposureControl.Mode.Manual);
-        webcam.getWhiteBalanceControl().setMode(WhiteBalanceControl.Mode.AUTO);
-        int last_gain = gain;
-        int last_exp_time = exposure_time;
-        /*
-         * exposure: 15
-         * max exposure: 500
-         * min exposure: 0
-         * max gian: 100
-         * min gian: 0
-         * wb max: 6500
-         * wb min: 2800
-         */
-        while (opModeIsActive()) {
-            telemetry.addData("is detected",pipeline.isDetected());
-            telemetry.addData("offset", pipeline.getOffset());
-            telemetry.addData("angle(deg)",pipeline.getAngle());
-            telemetry.addData("wb max", webcam.getWhiteBalanceControl().getMaxWhiteBalanceTemperature());
-            telemetry.addData("wb min", webcam.getWhiteBalanceControl().getMinWhiteBalanceTemperature());
-            telemetry.addData("wb", webcam.getWhiteBalanceControl().getWhiteBalanceTemperature());
-            telemetry.update();
-            webcam.getGainControl().setGain(gain);
-            webcam.getExposureControl().setExposure(exposure_time, TimeUnit.MILLISECONDS);
-            webcam.getWhiteBalanceControl().setWhiteBalanceTemperature(wb);
-            sleep(10);
-            last_gain = gain;
-            last_exp_time = exposure_time;
-        }
-    }
+         @Override
+         public void onError(int errorCode) {
+         }
+      });
+      telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+      telemetry.update();
+      pipeline.setSideRed(isRed);
+      if (junctionMode)
+         pipeline.openJunctionMode();
+      FtcDashboard.getInstance().startCameraStream(webcam, 10);
+      waitForStart();
+      webcam.getExposureControl().setMode(ExposureControl.Mode.Manual);
+      webcam.getWhiteBalanceControl().setMode(WhiteBalanceControl.Mode.AUTO);
+      int last_gain = gain;
+      int last_exp_time = exposure_time;
+      /*
+       * exposure: 15
+       * max exposure: 500
+       * min exposure: 0
+       * max gian: 100
+       * min gian: 0
+       * wb max: 6500
+       * wb min: 2800
+       */
+      while (opModeIsActive()) {
+         telemetry.addData("is detected", pipeline.isDetected());
+         telemetry.addData("offset", pipeline.getOffset());
+         telemetry.addData("angle(deg)", pipeline.getAngle());
+         telemetry.addData("wb max", webcam.getWhiteBalanceControl().getMaxWhiteBalanceTemperature());
+         telemetry.addData("wb min", webcam.getWhiteBalanceControl().getMinWhiteBalanceTemperature());
+         telemetry.addData("wb", webcam.getWhiteBalanceControl().getWhiteBalanceTemperature());
+         telemetry.update();
+         webcam.getGainControl().setGain(gain);
+         webcam.getExposureControl().setExposure(exposure_time, TimeUnit.MILLISECONDS);
+         webcam.getWhiteBalanceControl().setWhiteBalanceTemperature(wb);
+         sleep(10);
+         last_gain = gain;
+         last_exp_time = exposure_time;
+      }
+   }
 }

@@ -54,23 +54,17 @@ public abstract class AutoMaster extends LinearOpMode {
    protected int cone_index;
 
    protected void initHardware() throws InterruptedException {
-//      PhotonCore.enable();
-      telemetry.addLine("init: webcam");
-      telemetry.update();
-      AutoDetectionPipeline pipeline = new AutoDetectionPipeline(0.045, 578.272, 578.272, 402.145, 221.506);
-      drive.webcam.setPipeline(pipeline);
-
       MIDDLE_FIRST_EJECT_POS = new Pose2d(x_axis - 60, 110 * startSide, Math.toRadians(-135) * startSide);
       MIDDLE_EJECT_POS = new Pose2d(x_axis - 160, 0, Math.toRadians(180) * startSide);
       GRAB_POS = new Pose2d(x_axis, 1500 * startSide, Math.toRadians(90) * startSide);
 
       SIDE_EJECT_POS = new Pose2d(x_axis + 160, 600 * startSide, Math.toRadians(0) * startSide);
-      SIDE_FIRST_EJECT_POS = new Pose2d(x_axis + 150, 760 * startSide, Math.toRadians(-45) * startSide);
+      SIDE_FIRST_EJECT_POS = new Pose2d(x_axis + 180, (900-170) * startSide, Math.toRadians(-45) * startSide);
       startPos = new Pose2d(0, 900 * startSide, 0);
       end_pos_index = 0;
-//      FtcDashboard.getInstance().startCameraStream(webcam, 10);
-      telemetry.update();
+//      PhotonCore.enable();
       telemetry.addLine("init: drive");
+      telemetry.update();
       drive = new AutoMecanumDrive(hardwareMap);
       drive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       drive.setPoseEstimate(startPos);
@@ -103,14 +97,16 @@ public abstract class AutoMaster extends LinearOpMode {
       }
       telemetry.addLine("init: pipeline");
       telemetry.update();
-      runtime = new ElapsedTime();
-      runtime.reset();
-      sleep(500);
+      sleep(1000);
+      AutoDetectionPipeline pipeline = new AutoDetectionPipeline(0.045, 578.272, 578.272, 402.145, 221.506);
+      drive.webcam.setPipeline(pipeline);
+
+
+
       upper.closeHand();
       while (!opModeIsActive()) {
-//         int id = pipeline.getId();
-//         end_pos_index = id == 0 ? end_pos_index : id;
-         end_pos_index = 0;
+         int id = pipeline.getId();
+         end_pos_index = id == 0 ? end_pos_index : id;
          long time = System.currentTimeMillis();
          telemetry.addData("pos", end_pos_index);
          telemetry.update();
@@ -119,11 +115,9 @@ public abstract class AutoMaster extends LinearOpMode {
          if (isStopRequested()) throw new InterruptedException();
       }
       waitForStart();
+      runtime = new ElapsedTime();
       runtime.reset();
       drive.setSimpleMovePower(0.7);
-
-//      webcam.closeCameraDeviceAsync(() -> {
-//      });
    }
 
    protected void longMoveNormal(int stableTime) throws Exception {

@@ -219,6 +219,7 @@ public class TeleOp16093 extends LinearOpMode {
                   startTime = System.currentTimeMillis();
                   if (upper_release.toTrue()) {
                      upper.armChange(0.1);
+                     upper.sleep_with_drive(50);
                      upper.guideBack();
                      while (upper_release.get()) {
                         logic_period();

@@ -8,11 +8,12 @@ public class AutoTestRight extends AutoMaster{
    @Override
    public void runOpMode() throws InterruptedException{
       startSide = RIGHT;
-      firstJunctionPos = Junction.MIDDLE_HIGH;
+      side_color = BLUE;
+      firstJunctionPos = Junction.SIDE_HIGH;
       initHardware();
       try {
          longMoveNormal(300);
-         eject(200);
+         eject(0);
          for (cone_index = 4; cone_index >= 0; cone_index--) {
             try {
                intake(cone_index,firstJunctionPos);
@@ -20,7 +21,7 @@ public class AutoTestRight extends AutoMaster{
                intakeSave();
             }
             moveToEject(Junction.SIDE_HIGH);
-            eject(300);
+            eject(0);
          }
          breakPoint();
          park();

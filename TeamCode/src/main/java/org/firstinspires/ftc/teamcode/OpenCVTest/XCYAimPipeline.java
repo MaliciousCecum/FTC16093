@@ -59,6 +59,10 @@ public class XCYAimPipeline extends OpenCvPipeline {
 
       input.copyTo(output_mat);
 
+      if (!junctionMode){
+         Imgproc.rectangle(process_mat,new Point(0,0),new Point(640,130),new Scalar(0,0,0),-1);
+      }
+
       if (cb_blur_img)
          process_mat.copyTo(output_mat);
 
@@ -110,8 +114,8 @@ public class XCYAimPipeline extends OpenCvPipeline {
             Point[] boxPoints = new Point[4];
             rec.points(boxPoints);
             if (c == 0) {
-               Imgproc.line(output_mat,new Point(rec.center.x,0),new Point(rec.center.x,480),new Scalar(127, 255, 0));
-               Imgproc.line(output_mat,new Point(0,rec.center.y),new Point(640,rec.center.y),new Scalar(127, 255, 0));
+               Imgproc.line(output_mat, new Point(rec.center.x, 0), new Point(rec.center.x, 480), new Scalar(255, 0, 0));
+               Imgproc.line(output_mat, new Point(0, rec.center.y), new Point(640, rec.center.y), new Scalar(255, 0, 0));
             }
             Point junctionTextPos = new Point(500, 200);
             Point coneStackTextPos = new Point(500, 280);
@@ -124,8 +128,8 @@ public class XCYAimPipeline extends OpenCvPipeline {
             }
             Imgproc.putText(output_mat, "i=" + c + ",a=" + area,
                     boxPoints[2], Imgproc.FONT_HERSHEY_COMPLEX, 0.5, new Scalar(0, 0, 255));
-            Imgproc.putText(output_mat, "连接点", junctionTextPos, Imgproc.FONT_HERSHEY_PLAIN, 2, new Scalar(127, 255, 0));
-            Imgproc.putText(output_mat, "锥筒", coneStackTextPos, Imgproc.FONT_HERSHEY_PLAIN, 2, new Scalar(127, 255, 0));
+            Imgproc.putText(output_mat, "Junction", junctionTextPos, Imgproc.FONT_HERSHEY_COMPLEX_SMALL, 2, new Scalar(127, 255, 0), 2);
+            Imgproc.putText(output_mat, "Cone", coneStackTextPos, Imgproc.FONT_HERSHEY_COMPLEX_SMALL, 2, new Scalar(127, 255, 0), 2);
          }
       }
       return output_mat;

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import static org.firstinspires.ftc.teamcode.Configurations.clamp;
+import static org.firstinspires.ftc.teamcode.Configurations.get_pos_from_csv;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
@@ -48,7 +49,7 @@ public class TeleOp16093 extends LinearOpMode {
       drive = new AutoMecanumDrive(hardwareMap);
       drive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       drive.setJunctionMode();
-//      drive.getLocalizer().setPoseEstimate(get_pos_from_csv());
+      drive.getLocalizer().setPoseEstimate(get_pos_from_csv());
       boolean holding = false;
       isConeSaveMode = false;
       XCYBoolean color_detected = new XCYBoolean(() -> drive.isColorDetected());
@@ -63,6 +64,7 @@ public class TeleOp16093 extends LinearOpMode {
       XCYBoolean mid_j = new XCYBoolean(() -> !gamepad1.share && gamepad1.dpad_up);
       XCYBoolean setOriginal = new XCYBoolean(() -> gamepad1.touchpad && gamepad1.square);
       XCYBoolean activate_cone_save = new XCYBoolean(()-> isConeSaveMode);
+      boolean useSensor = true;
 //      to_last_eject = new XCYBoolean(() -> gamepad1.left_bumper && holding);
 
 //      telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
@@ -94,6 +96,10 @@ public class TeleOp16093 extends LinearOpMode {
       while (opModeIsActive()) {
          logic_period();
          drive_period();
+
+         if (gamepad1.touchpad && gamepad1.share){
+            useSensor = false;
+         }
 
          if (activate_cone_save.toTrue()){
             gamepad2.runLedEffect(effect_control);
@@ -138,7 +144,7 @@ public class TeleOp16093 extends LinearOpMode {
             sequence = Sequence.EMPTY_DOWN;
          }
 
-         if (color_detected.toTrue() && sequence == Sequence.EMPTY_DOWN&&!isConeSaveMode) {
+         if (color_detected.toTrue() && sequence == Sequence.EMPTY_DOWN && !isConeSaveMode) {
             upper.grab();
             holding = true;
             sequence = Sequence.HOLDING_AWAIT;
@@ -209,7 +215,12 @@ public class TeleOp16093 extends LinearOpMode {
                do {
                   while (!(upper_release.toTrue() || high_j.get() || mid_j.get() || low_j.get() || intake_action.get())) {
                      logic_period();
-                     webcam_drive_period();
+                     if (useSensor) {
+                        webcam_drive_period();
+                     }
+                     else {
+                     drive_period();}
+
                      if (Math.abs(drive.getOffSet())<140){
                         upper.guideOut();
                      } else {
@@ -240,7 +251,7 @@ public class TeleOp16093 extends LinearOpMode {
          if (upper_release.toFalse()) {
             //x
             upper.guideBack();
-            isConeSaveMode =false;
+            isConeSaveMode = false;
             if (sequence == Sequence.HOLDING_AWAIT) {
                upper.toGroundJunction();
                sequence = Sequence.HOLDING_UP;

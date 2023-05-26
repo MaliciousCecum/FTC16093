@@ -1,15 +1,17 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.Configurations.GlobalTimeoutException;
+import static org.firstinspires.ftc.teamcode.Configurations.TimeoutException;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import static org.firstinspires.ftc.teamcode.Configurations.*;
 
 @Autonomous
-public class AutoTest extends AutoMaster{
+public class RedLeft extends AutoMaster{
 
    @Override
    public void runOpMode() throws InterruptedException{
       startSide = LEFT;
-      side_color = BLUE;
+      side_color = RED;
       firstJunctionPos = Junction.SIDE_HIGH;
       initHardware();
       try {
@@ -18,7 +20,7 @@ public class AutoTest extends AutoMaster{
          for (cone_index = 4; cone_index >= 0; cone_index--) {
             try {
                intake(cone_index,firstJunctionPos);
-            } catch (Configurations.TimeoutException e) {
+            } catch (TimeoutException e) {
                intakeSave();
             }
             moveToEject(Junction.SIDE_HIGH);

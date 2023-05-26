@@ -58,7 +58,7 @@ public abstract class AutoMaster extends LinearOpMode {
       MIDDLE_EJECT_POS = new Pose2d(x_axis - 140, 0, Math.toRadians(180) * startSide);
       GRAB_POS = new Pose2d(x_axis, 1520 * startSide, Math.toRadians(90) * startSide);
 
-      SIDE_EJECT_POS = new Pose2d(x_axis + 140, 600 * startSide, Math.toRadians(0) * startSide);
+      SIDE_EJECT_POS = new Pose2d(x_axis + 100, 600 * startSide, Math.toRadians(0) * startSide);
       SIDE_FIRST_EJECT_POS = new Pose2d(x_axis + 180, (900 - 170) * startSide, Math.toRadians(-45) * startSide);
       startPos = new Pose2d(0, 900 * startSide, 0);
       end_pos_index = 0;
@@ -79,6 +79,7 @@ public abstract class AutoMaster extends LinearOpMode {
               this,
               drive::update
       );
+      upper.guideBack();
       upper.toSeeJunction();
       upper.setSideIsRed(side_color);
       telemetry.addLine("init: trajectory");
@@ -132,14 +133,14 @@ public abstract class AutoMaster extends LinearOpMode {
          drive.waitForIdle();
          drive.initSimpleMove(MIDDLE_FIRST_EJECT_POS);
       } else {
+         drive.initSimpleMove(new Pose2d(x_axis+130, startPos.getY()));
+         drive.waitForIdle();
          drive.initSimpleMove(new Pose2d(x_axis, startPos.getY()));
-         while (opModeIsActive() && drive.getPoseEstimate().getX() < 900) {
-            drive.update();
-         }
+         drive.waitForIdle();
          drive.setSimpleMovePower(0.5);
          drive.initSimpleMove(SIDE_FIRST_EJECT_POS);
-         upper.guideOut();
          upper.toHighJunction();
+         upper.guideOut();
       }
       drive.waitForIdle();
       drive.moveForTime(stableTime);
@@ -177,6 +178,7 @@ public abstract class AutoMaster extends LinearOpMode {
    protected void intake(int index, Junction lastJunction) throws Exception {
       drive.setSimpleMovePower(0.5);
       //手放到可以看摄像头的地方
+      drive.setSimpleMoveTolerance(50,Math.toRadians(3));
       drive.initSimpleMove(new Pose2d(x_axis, drive.getSimpleMovePosition().getY() + 200 * startSide, Math.toRadians(90) * startSide));
       drive.setRed(side_color);
       upper.toSeeJunction();
@@ -186,8 +188,9 @@ public abstract class AutoMaster extends LinearOpMode {
       while (lastJunction == Junction.SIDE_HIGH && drive.getPoseEstimate().getY() * startSide < 360) {
          drive.update();
          drive.setDrivePower(new Pose2d(0.3));
+         if (runtime.seconds() > 28) throw new GlobalTimeoutException();
       }
-      while (drive.getPoseEstimate().getY() * startSide < 1250) {
+      while (drive.getPoseEstimate().getY() * startSide < 1260) {
          drive.update();//持续更新车的位置
          if (drive.isWebcamDetected())
             drive.lineFollowPeriod(0.5);
@@ -200,6 +203,7 @@ public abstract class AutoMaster extends LinearOpMode {
       drive.setDrivePower(new Pose2d(0.1));
       while (!drive.isColorDetected()) {
          drive.update();
+         if (runtime.seconds() > 28) throw new GlobalTimeoutException();
       }
       drive.setDrivePower(new Pose2d());
       drive.moveForTime(100);
@@ -210,7 +214,7 @@ public abstract class AutoMaster extends LinearOpMode {
    }
 
    protected void moveToEject(Junction targetJunction) throws InterruptedException {
-      drive.setSimpleMovePower(0.7);
+      drive.setSimpleMovePower(1);
       drive.setJunctionMode();
       drive.setSimpleMoveTolerance(50, Math.toRadians(5));
       if (targetJunction == Junction.MIDDLE_HIGH) {
@@ -226,6 +230,7 @@ public abstract class AutoMaster extends LinearOpMode {
       } else {
          drive.initSimpleMove(new Pose2d(x_axis, 600 * startSide, Math.toRadians(0) * startSide));
          upper.toHighJunction();
+         if (runtime.seconds() > 28) throw new GlobalTimeoutException();
          drive.waitForIdle();
          drive.initSimpleMove(SIDE_EJECT_POS);
       }
@@ -268,6 +273,7 @@ public abstract class AutoMaster extends LinearOpMode {
          endPos = (LEFT_END_POSITIONS[end_pos_index]);
       }
       drive.setSimpleMovePower(1);
+      upper.post_eject();
       drive.initSimpleMove(endPos);
       drive.waitForIdle();
       drive.moveForTime(200);

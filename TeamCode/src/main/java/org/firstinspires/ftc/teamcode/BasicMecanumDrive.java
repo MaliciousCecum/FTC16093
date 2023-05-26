@@ -324,7 +324,7 @@ public class BasicMecanumDrive extends MecanumDrive {
    }
 
    public static PIDCoefficients translationPid = new PIDCoefficients(0.007, 0.000, 0.0009);
-   public static PIDCoefficients headingPid = new PIDCoefficients(1.3, 0., 0.13);
+   public static PIDCoefficients headingPid = new PIDCoefficients(1.5, 0., 0.13);
 
    private PIDFController transPID_x;
    private PIDFController transPID_y;
@@ -397,6 +397,6 @@ public class BasicMecanumDrive extends MecanumDrive {
    }
 
    public boolean isColorDetected(){
-     return (color.alpha()>200);
+     return (color.alpha()>250);
    }
 }

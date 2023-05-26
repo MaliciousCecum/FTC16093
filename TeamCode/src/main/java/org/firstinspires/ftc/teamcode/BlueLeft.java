@@ -1,13 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import static org.firstinspires.ftc.teamcode.Configurations.*;
 
 @Autonomous
-public class AutoTestRight extends AutoMaster{
+public class BlueLeft extends AutoMaster{
 
    @Override
    public void runOpMode() throws InterruptedException{
-      startSide = RIGHT;
+      startSide = LEFT;
       side_color = BLUE;
       firstJunctionPos = Junction.SIDE_HIGH;
       initHardware();
@@ -24,7 +25,7 @@ public class AutoTestRight extends AutoMaster{
             eject(0);
          }
          park();
-      } catch (Configurations.GlobalTimeoutException e) {
+      } catch (GlobalTimeoutException e) {
          park();
       } catch (Exception e) {
          throw new InterruptedException();

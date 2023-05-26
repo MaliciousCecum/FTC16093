@@ -19,6 +19,8 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvWebcam;
 
+import java.util.concurrent.TimeUnit;
+
 @Config
 public class AutoMecanumDrive extends BasicMecanumDrive {
    OpenCvWebcam webcam;
@@ -27,6 +29,8 @@ public class AutoMecanumDrive extends BasicMecanumDrive {
    public static final int HEIGHT = 480;
    public static PIDCoefficients lfPIDCoeff = new PIDCoefficients(0.5, 0, 0.01);
    private final PIDFController lfPID;
+   public static int junctionModeExp = 23;
+   public static int coneModeExp = 21;
 
    public AutoMecanumDrive(HardwareMap hardwareMap) {
       super(hardwareMap);
@@ -54,6 +58,7 @@ public class AutoMecanumDrive extends BasicMecanumDrive {
    public void setRed(boolean red) {
       pipeline.setSideRed(red);
       webcam.setPipeline(pipeline);
+      webcam.getExposureControl().setExposure(coneModeExp, TimeUnit.MILLISECONDS);
    }
 
    //TODO
@@ -61,6 +66,7 @@ public class AutoMecanumDrive extends BasicMecanumDrive {
    public void setJunctionMode(){
       pipeline.openJunctionMode();
       webcam.setPipeline(pipeline);
+      webcam.getExposureControl().setExposure(junctionModeExp, TimeUnit.MILLISECONDS);
    }
 
    public boolean isWebcamDetected(){
@@ -75,7 +81,7 @@ public class AutoMecanumDrive extends BasicMecanumDrive {
       setDrivePower(new Pose2d(
               powerX,
               0,
-              lfPID.update(-pipeline.getOffset()/250)
+              clamp(lfPID.update(-pipeline.getOffset()/250),0.3)
       ));
    }
 

@@ -55,11 +55,11 @@ public abstract class AutoMaster extends LinearOpMode {
 
    protected void initHardware() throws InterruptedException {
       MIDDLE_FIRST_EJECT_POS = new Pose2d(x_axis - 60, 110 * startSide, Math.toRadians(-135) * startSide);
-      MIDDLE_EJECT_POS = new Pose2d(x_axis - 160, 0, Math.toRadians(180) * startSide);
-      GRAB_POS = new Pose2d(x_axis, 1500 * startSide, Math.toRadians(90) * startSide);
+      MIDDLE_EJECT_POS = new Pose2d(x_axis - 140, 0, Math.toRadians(180) * startSide);
+      GRAB_POS = new Pose2d(x_axis, 1520 * startSide, Math.toRadians(90) * startSide);
 
-      SIDE_EJECT_POS = new Pose2d(x_axis + 160, 600 * startSide, Math.toRadians(0) * startSide);
-      SIDE_FIRST_EJECT_POS = new Pose2d(x_axis + 180, (900-170) * startSide, Math.toRadians(-45) * startSide);
+      SIDE_EJECT_POS = new Pose2d(x_axis + 140, 600 * startSide, Math.toRadians(0) * startSide);
+      SIDE_FIRST_EJECT_POS = new Pose2d(x_axis + 180, (900 - 170) * startSide, Math.toRadians(-45) * startSide);
       startPos = new Pose2d(0, 900 * startSide, 0);
       end_pos_index = 0;
 //      PhotonCore.enable();
@@ -102,7 +102,6 @@ public abstract class AutoMaster extends LinearOpMode {
       drive.webcam.setPipeline(pipeline);
 
 
-
       upper.closeHand();
       while (!opModeIsActive()) {
          int id = pipeline.getId();
@@ -123,6 +122,7 @@ public abstract class AutoMaster extends LinearOpMode {
    protected void longMoveNormal(int stableTime) throws Exception {
       if (isStopRequested()) return;
       upper.closeHand();
+      drive.setJunctionMode();
       if (firstJunctionPos == Junction.MIDDLE_HIGH) {
          drive.followTrajectoryAsync(startToEject);
          while (opModeIsActive() && Math.abs(drive.getPoseEstimate().getY() - MIDDLE_FIRST_EJECT_POS.getY()) > 150) {
@@ -136,12 +136,42 @@ public abstract class AutoMaster extends LinearOpMode {
          while (opModeIsActive() && drive.getPoseEstimate().getX() < 900) {
             drive.update();
          }
+         drive.setSimpleMovePower(0.5);
          drive.initSimpleMove(SIDE_FIRST_EJECT_POS);
-         upper.toHighJunction();
          upper.guideOut();
+         upper.toHighJunction();
       }
       drive.waitForIdle();
       drive.moveForTime(stableTime);
+   }
+
+   protected void longMoveAttack() { //TODO
+      drive.initSimpleMove(new Pose2d(x_axis, startPos.getY()));
+      while (opModeIsActive() && drive.getPoseEstimate().getX() < 900) {
+         drive.update();
+      }
+      drive.initSimpleMove(new Pose2d(x_axis + 300, startPos.getY(), Math.toRadians(-90) * startSide));
+      drive.waitForIdle();
+      upper.toHighJunction();
+      drive.moveForTime(2000);
+      drive.initSimpleMove(new Pose2d(x_axis + 300, startPos.getY() - 60 * startSide, Math.toRadians(-90) * startSide));
+      upper.guideOut();
+      drive.waitForIdle();
+      drive.moveForTime(500);
+   }
+
+   protected void longMoveDefence() {
+      drive.initSimpleMove(new Pose2d(x_axis, startPos.getY()));
+      while (opModeIsActive() && drive.getPoseEstimate().getX() < 900) {
+         drive.update();
+      }
+      drive.initSimpleMove(new Pose2d(x_axis + 130, startPos.getY(), Math.toRadians(-90) * startSide));
+      drive.waitForIdle();
+      drive.initSimpleMove(SIDE_FIRST_EJECT_POS);
+      upper.toHighJunction();
+      upper.guideOut();
+      drive.waitForIdle();
+      drive.moveForTime(200);
    }
 
    protected void intake(int index, Junction lastJunction) throws Exception {
@@ -182,6 +212,7 @@ public abstract class AutoMaster extends LinearOpMode {
    protected void moveToEject(Junction targetJunction) throws InterruptedException {
       drive.setSimpleMovePower(0.7);
       drive.setJunctionMode();
+      drive.setSimpleMoveTolerance(50, Math.toRadians(5));
       if (targetJunction == Junction.MIDDLE_HIGH) {
          drive.initSimpleMove(new Pose2d(x_axis, 300 * startSide, Math.toRadians(90) * startSide));
          while (drive.getPoseEstimate().getY() * startSide > 900) {
@@ -202,6 +233,8 @@ public abstract class AutoMaster extends LinearOpMode {
       drive.setSimpleMoveTolerance(25, Math.toRadians(5));
       drive.waitForIdle();
       drive.setSimpleMoveTolerance(70, Math.toRadians(15));
+//      drive.stopSimpleMove();
+//      drive.setDrivePower(new Pose2d(0.3));
    }
 
    protected void eject(int stable_time) throws Exception {
@@ -234,6 +267,7 @@ public abstract class AutoMaster extends LinearOpMode {
       } else {
          endPos = (LEFT_END_POSITIONS[end_pos_index]);
       }
+      drive.setSimpleMovePower(1);
       drive.initSimpleMove(endPos);
       drive.waitForIdle();
       drive.moveForTime(200);

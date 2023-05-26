@@ -23,7 +23,6 @@ public class AutoTestRight extends AutoMaster{
             moveToEject(Junction.SIDE_HIGH);
             eject(0);
          }
-         breakPoint();
          park();
       } catch (Configurations.GlobalTimeoutException e) {
          park();

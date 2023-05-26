@@ -22,8 +22,8 @@ public class TeleOp16093 extends LinearOpMode {
    private double global_drive_power = 1;
    private double global_drive_turn_ratio = 1;
 
-   public static final double x_static_compensation = 0.06;
-   public static final double y_static_compensation = 0.06;
+   public static  double x_static_compensation = 0.06;
+   public static double y_static_compensation = 0.06;
    public static double webcamPower = 0.5;
 
    private AutoMecanumDrive drive;
@@ -209,7 +209,7 @@ public class TeleOp16093 extends LinearOpMode {
                do {
                   while (!(upper_release.toTrue() || high_j.get() || mid_j.get() || low_j.get() || intake_action.get())) {
                      logic_period();
-                     drive_webcam();
+                     webcam_drive_period();
                      if (Math.abs(drive.getOffSet())<140){
                         upper.guideOut();
                      } else {
@@ -308,7 +308,7 @@ public class TeleOp16093 extends LinearOpMode {
       drive.update();
    }
 
-   private void drive_webcam() {
+   private void webcam_drive_period() {
       double x = -gamepad1.left_stick_y * 0.35 + -gamepad1.right_stick_y * 0.65;
       double y = -gamepad1.left_stick_x * 0.35 + -gamepad1.right_stick_x * 0.65;
       double turn_val = (gamepad1.left_trigger - gamepad1.right_trigger);

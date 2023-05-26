@@ -24,7 +24,6 @@ public class AutoTest extends AutoMaster{
             moveToEject(Junction.SIDE_HIGH);
             eject(0);
          }
-         breakPoint();
          park();
       } catch (GlobalTimeoutException e) {
          park();

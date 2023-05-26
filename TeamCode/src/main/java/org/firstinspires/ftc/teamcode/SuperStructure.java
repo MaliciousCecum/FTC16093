@@ -17,7 +17,7 @@ public class SuperStructure {
    public static int LIFT_MIN = 0;
    public static int LIFT_LOW = 350;
    public static int LIFT_MID = 850;
-   public static int LIFT_HIGH = 1260;
+   public static int LIFT_HIGH = 1300;
    public static int LIFT_ADD_PER_CONE = 50;
 
    public static final int LIFT_TOLERANCE = 15;
@@ -166,8 +166,8 @@ public class SuperStructure {
    }
 
    public void openHand() {
-      leftClaw.setPosition(0.27);
-      rightClaw.setPosition(0.8);
+      leftClaw.setPosition(0.31);
+      rightClaw.setPosition(0.76);
    }
 
    public void closeHand() {
@@ -245,10 +245,10 @@ public class SuperStructure {
    }
 
    public void guideOut(){
-      guide.setPosition(0.23);
+      guide.setPosition(0.37);
    }
 
    public void guideBack(){
-      guide.setPosition(0.56);
+      guide.setPosition(0.71);
    }
 }

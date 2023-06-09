@@ -29,8 +29,8 @@ public class AutoMecanumDrive extends BasicMecanumDrive {
    public static final int HEIGHT = 480;
    public static PIDCoefficients lfPIDCoeff = new PIDCoefficients(0.5, 0, 0.01);
    private final PIDFController lfPID;
-   public static int junctionModeExp = 23;
-   public static int coneModeExp = 21;
+   public static int junctionModeExp = 15;
+   public static int coneModeExp = 15;
 
    public AutoMecanumDrive(HardwareMap hardwareMap) {
       super(hardwareMap);
@@ -50,6 +50,7 @@ public class AutoMecanumDrive extends BasicMecanumDrive {
       });
       FtcDashboard.getInstance().startCameraStream(webcam, 10);
       webcam.getExposureControl().setMode(ExposureControl.Mode.Manual);
+      webcam.getExposureControl().setExposure(14,TimeUnit.MILLISECONDS);
       webcam.getWhiteBalanceControl().setMode(WhiteBalanceControl.Mode.AUTO);
       lfPID = new PIDFController(lfPIDCoeff);
       lfPID.setTargetPosition(0);
@@ -60,8 +61,6 @@ public class AutoMecanumDrive extends BasicMecanumDrive {
       webcam.setPipeline(pipeline);
       webcam.getExposureControl().setExposure(coneModeExp, TimeUnit.MILLISECONDS);
    }
-
-   //TODO
 
    public void setJunctionMode(){
       pipeline.openJunctionMode();

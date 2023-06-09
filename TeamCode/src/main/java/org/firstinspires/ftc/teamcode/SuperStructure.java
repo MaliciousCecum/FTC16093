@@ -18,9 +18,9 @@ public class SuperStructure {
    public static int LIFT_LOW = 350;
    public static int LIFT_MID = 850;
    public static int LIFT_HIGH = 1300;
-   public static int LIFT_ADD_PER_CONE = 50;
+   public static int LIFT_ADD_PER_CONE = 60;
 
-   public static final int LIFT_TOLERANCE = 15;
+   public static final int LIFT_TOLERANCE = 20;
 
    private final DcMotorEx liftMotorLeft, liftMotorRight;
    private final Servo leftClaw, rightClaw, arm,guide;
@@ -146,10 +146,10 @@ public class SuperStructure {
 
    public void verticalGrab() {
       closeHand();
-      sleep_with_drive(150);
-      int target = (int) getLifterPos() + 250;
-      setLifterPosition(target, 1);
-      while (Math.abs(getLifterPos() - target) > LIFT_TOLERANCE && opMode.opModeIsActive()) {
+      sleep_with_drive(100);
+      int target = (int) getLifterPos() + 100;
+      setLifterPower(1);
+      while (getLifterPos() < target && opMode.opModeIsActive()) {
          drive_period.run();
       }
       setArm(ARM_MIDDLE);

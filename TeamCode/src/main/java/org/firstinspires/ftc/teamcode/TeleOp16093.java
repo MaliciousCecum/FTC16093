@@ -23,7 +23,7 @@ public class TeleOp16093 extends LinearOpMode {
    private double global_drive_power = 1;
    private double global_drive_turn_ratio = 1;
 
-   public static  double x_static_compensation = 0.06;
+   public static double x_static_compensation = 0.06;
    public static double y_static_compensation = 0.06;
    public static double webcamPower = 0.5;
 
@@ -63,7 +63,7 @@ public class TeleOp16093 extends LinearOpMode {
       XCYBoolean low_j = new XCYBoolean(() -> !gamepad1.share && gamepad1.dpad_down);
       XCYBoolean mid_j = new XCYBoolean(() -> !gamepad1.share && gamepad1.dpad_up);
       XCYBoolean setOriginal = new XCYBoolean(() -> gamepad1.touchpad && gamepad1.square);
-      XCYBoolean activate_cone_save = new XCYBoolean(()-> isConeSaveMode);
+      XCYBoolean activate_cone_save = new XCYBoolean(() -> isConeSaveMode);
       boolean useSensor = true;
 //      to_last_eject = new XCYBoolean(() -> gamepad1.left_bumper && holding);
 
@@ -97,19 +97,19 @@ public class TeleOp16093 extends LinearOpMode {
          logic_period();
          drive_period();
 
-         if (gamepad1.touchpad && gamepad1.share){
+         if (gamepad1.touchpad && gamepad1.share) {
             useSensor = false;
          }
 
-         if (activate_cone_save.toTrue()){
+         if (activate_cone_save.toTrue()) {
             gamepad2.runLedEffect(effect_control);
             gamepad1.runLedEffect(effect_idle);
-         } else if (activate_cone_save.toFalse()){
+         } else if (activate_cone_save.toFalse()) {
             gamepad1.runLedEffect(effect_control);
             gamepad2.runLedEffect(effect_idle);
          }
 
-         if (gamepad2.touchpad){
+         if (gamepad2.touchpad) {
             isConeSaveMode = true;
          }
 
@@ -217,15 +217,17 @@ public class TeleOp16093 extends LinearOpMode {
                      logic_period();
                      if (useSensor) {
                         webcam_drive_period();
-                     }
-                     else {
-                     drive_period();}
-
-                     if (Math.abs(drive.getOffSet())<140){
-                        upper.guideOut();
+                        if (Math.abs(drive.getOffSet()) < 140) {
+                           upper.guideOut();
+                        } else {
+                           upper.guideBack();
+                        }
                      } else {
-                        upper.guideBack();
+                        drive_period();
+                        upper.guideOut();
                      }
+
+
                   }
                   startTime = System.currentTimeMillis();
                   if (upper_release.toTrue()) {
@@ -293,7 +295,7 @@ public class TeleOp16093 extends LinearOpMode {
    }
 
    private void drive_period() {
-      if (isConeSaveMode){
+      if (isConeSaveMode) {
          double x = -gamepad2.left_stick_y * 0.35 + -gamepad2.right_stick_y * 0.65;
          double y = -gamepad2.left_stick_x * 0.35 + -gamepad2.right_stick_x * 0.65;
          double turn_val = (gamepad2.left_trigger - gamepad2.right_trigger);
@@ -323,7 +325,7 @@ public class TeleOp16093 extends LinearOpMode {
       double x = -gamepad1.left_stick_y * 0.35 + -gamepad1.right_stick_y * 0.65;
       double y = -gamepad1.left_stick_x * 0.35 + -gamepad1.right_stick_x * 0.65;
       double turn_val = (gamepad1.left_trigger - gamepad1.right_trigger);
-      if (Math.abs(turn_val) < 0.001&&Math.abs(drive.getOffSet())>150) {
+      if (Math.abs(turn_val) < 0.001 && Math.abs(drive.getOffSet()) > 150) {
          turn_val = drive.getOffSet() / 250 * webcamPower;
       }
       Pose2d power = (new Pose2d(x, y, turn_val * global_drive_turn_ratio)).times(global_drive_power);

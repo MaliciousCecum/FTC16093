@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.Configurations.*;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -34,34 +35,35 @@ public abstract class AutoMaster extends LinearOpMode {
    private SuperStructure upper;
 
    Pose2d[] RIGHT_END_POSITIONS = {
-           new Pose2d(x_axis, -300, Math.toRadians(-90)),
-           new Pose2d(x_axis, -300, Math.toRadians(-90)),
-           new Pose2d(x_axis, -900, Math.toRadians(-90)),
-           new Pose2d(x_axis, -1500, Math.toRadians(-90))
+           new Pose2d(x_axis, -280, Math.toRadians(-90)),
+           new Pose2d(x_axis, -280, Math.toRadians(-90)),
+           new Pose2d(x_axis, -880, Math.toRadians(-90)),
+           new Pose2d(x_axis, -1480, Math.toRadians(-90))
    };
 
    Pose2d[] LEFT_END_POSITIONS = {
-           new Pose2d(x_axis, 300, Math.toRadians(90)),
-           new Pose2d(x_axis, 1500, Math.toRadians(90)),
-           new Pose2d(x_axis, 900, Math.toRadians(90)),
-           new Pose2d(x_axis, 300, Math.toRadians(90))
+           new Pose2d(x_axis, 280, Math.toRadians(90)),
+           new Pose2d(x_axis, 1480, Math.toRadians(90)),
+           new Pose2d(x_axis, 880, Math.toRadians(90)),
+           new Pose2d(x_axis, 280, Math.toRadians(90))
    };
    Trajectory startToEject;
 
    Pose2d MIDDLE_FIRST_EJECT_POS, MIDDLE_EJECT_POS, GRAB_POS, SIDE_EJECT_POS, SIDE_FIRST_EJECT_POS, startPos;
-
+   Vector2d coneVec;
    int end_pos_index;
    protected int cone_index;
 
    protected void initHardware() throws InterruptedException {
       MIDDLE_FIRST_EJECT_POS = new Pose2d(x_axis - 60, 110 * startSide, Math.toRadians(-135) * startSide);
-      MIDDLE_EJECT_POS = new Pose2d(x_axis - 140, 0, Math.toRadians(180) * startSide);
+      MIDDLE_EJECT_POS = new Pose2d(x_axis - 150, 0, Math.toRadians(180) * startSide);
       GRAB_POS = new Pose2d(x_axis, 1520 * startSide, Math.toRadians(90) * startSide);
 
-      SIDE_EJECT_POS = new Pose2d(x_axis + 100, 600 * startSide, Math.toRadians(0) * startSide);
+      SIDE_EJECT_POS = new Pose2d(x_axis + 140, 600 * startSide, Math.toRadians(0) * startSide);
       SIDE_FIRST_EJECT_POS = new Pose2d(x_axis + 180, (900 - 170) * startSide, Math.toRadians(-45) * startSide);
       startPos = new Pose2d(0, 900 * startSide, 0);
       end_pos_index = 0;
+      coneVec = new Vector2d(x_axis,1760*startSide);
 //      PhotonCore.enable();
       telemetry.addLine("init: drive");
       telemetry.update();
@@ -133,7 +135,7 @@ public abstract class AutoMaster extends LinearOpMode {
          drive.waitForIdle();
          drive.initSimpleMove(MIDDLE_FIRST_EJECT_POS);
       } else {
-         drive.initSimpleMove(new Pose2d(x_axis+130, startPos.getY()));
+         drive.initSimpleMove(new Pose2d(x_axis + 130, startPos.getY()));
          drive.waitForIdle();
          drive.initSimpleMove(new Pose2d(x_axis, startPos.getY()));
          drive.waitForIdle();
@@ -142,7 +144,11 @@ public abstract class AutoMaster extends LinearOpMode {
          upper.toHighJunction();
          upper.guideOut();
       }
-      drive.waitForIdle();
+      long st = System.currentTimeMillis();
+      while (!drive.isColorDetected()&&System.currentTimeMillis()-st<600) {
+         drive.update();
+         if (runtime.seconds() > 28) throw new GlobalTimeoutException();
+      }
       drive.moveForTime(stableTime);
    }
 
@@ -171,14 +177,13 @@ public abstract class AutoMaster extends LinearOpMode {
       drive.initSimpleMove(SIDE_FIRST_EJECT_POS);
       upper.toHighJunction();
       upper.guideOut();
-      drive.waitForIdle();
       drive.moveForTime(200);
    }
 
    protected void intake(int index, Junction lastJunction) throws Exception {
       drive.setSimpleMovePower(0.5);
       //手放到可以看摄像头的地方
-      drive.setSimpleMoveTolerance(50,Math.toRadians(3));
+      drive.setSimpleMoveTolerance(50, Math.toRadians(3));
       drive.initSimpleMove(new Pose2d(x_axis, drive.getSimpleMovePosition().getY() + 200 * startSide, Math.toRadians(90) * startSide));
       drive.setRed(side_color);
       upper.toSeeJunction();
@@ -190,10 +195,10 @@ public abstract class AutoMaster extends LinearOpMode {
          drive.setDrivePower(new Pose2d(0.3));
          if (runtime.seconds() > 28) throw new GlobalTimeoutException();
       }
-      while (drive.getPoseEstimate().getY() * startSide < 1260) {
+      while (drive.getPoseEstimate().getY() * startSide < 1230) {
          drive.update();//持续更新车的位置
          if (drive.isWebcamDetected())
-            drive.lineFollowPeriod(0.5);
+            drive.lineFollowPeriod(0.6);
          else
             drive.setDrivePower(new Pose2d(0.15));
       }
@@ -201,16 +206,33 @@ public abstract class AutoMaster extends LinearOpMode {
       upper.toAim(index);//把手放到合适位置
       drive.stopSimpleMove();
       drive.setDrivePower(new Pose2d(0.1));
-      while (!drive.isColorDetected()) {
+      long st = System.currentTimeMillis();
+      while (!drive.isColorDetected()&&System.currentTimeMillis()-st<3000) {
          drive.update();
          if (runtime.seconds() > 28) throw new GlobalTimeoutException();
       }
-      drive.setDrivePower(new Pose2d());
-      drive.moveForTime(100);
-      drive.getLocalizer().setPoseEstimate(new Pose2d(GRAB_POS.vec(), drive.getPoseEstimate().getHeading()));
+//      drive.setDrivePower(new Pose2d());
+//      drive.moveForTime(100);
+//      drive.getLocalizer().setPoseEstimate(new Pose2d(GRAB_POS.vec(), drive.getPoseEstimate().getHeading()));
+//      drive.stopSimpleMove();
+//      drive.setDrivePower(new Pose2d());
+//      upper.grab();
+
+//      drive.stopSimpleMove();
+//      drive.setDrivePower(new Pose2d());
+//      drive.getLocalizer().setPoseEstimate(new Pose2d(GRAB_POS.vec(), drive.getPoseEstimate().getHeading()));
+//      drive.initSimpleMove(new Pose2d(GRAB_POS.getX(), GRAB_POS.getY() - 14 * startSide, drive.getPoseEstimate().getHeading()));
+//      drive.moveForTime(200);
+//      upper.verticalGrab();
+
       drive.stopSimpleMove();
       drive.setDrivePower(new Pose2d());
-      upper.grab();
+      double intakeLength = 255;
+      drive.getLocalizer().setPoseEstimate(new Pose2d(coneVec.minus(new Vector2d(intakeLength,0).rotated(drive.getPoseEstimate().getHeading())), drive.getPoseEstimate().getHeading()));
+      Pose2d cp = drive.getPoseEstimate();
+      drive.initSimpleMove(new Pose2d(cp.getX(), cp.getY() - 14 * startSide, cp.getHeading()));
+      drive.moveForTime(200);
+      upper.verticalGrab();
    }
 
    protected void moveToEject(Junction targetJunction) throws InterruptedException {
@@ -228,27 +250,36 @@ public abstract class AutoMaster extends LinearOpMode {
          drive.waitForIdle();
          drive.initSimpleMove(MIDDLE_EJECT_POS);
       } else {
-         drive.initSimpleMove(new Pose2d(x_axis, 600 * startSide, Math.toRadians(0) * startSide));
+         drive.initSimpleMove(new Pose2d(x_axis+10, 600 * startSide, Math.toRadians(0) * startSide));
          upper.toHighJunction();
-         if (runtime.seconds() > 28) throw new GlobalTimeoutException();
-         drive.waitForIdle();
+         while (drive.isBusy()) {
+            drive.update();
+            if (runtime.seconds() > 28) throw new GlobalTimeoutException();
+         }
          drive.initSimpleMove(SIDE_EJECT_POS);
       }
+      drive.setSimpleMoveTolerance(30, Math.toRadians(5));
+      long st = System.currentTimeMillis();
+      drive.moveForTime(200);
       upper.guideOut();
-      drive.setSimpleMoveTolerance(25, Math.toRadians(5));
-      drive.waitForIdle();
+      while (drive.isBusy() && System.currentTimeMillis() - st < 800) {
+         drive.update();
+         if (runtime.seconds() > 28) throw new GlobalTimeoutException();
+      }
       drive.setSimpleMoveTolerance(70, Math.toRadians(15));
-//      drive.stopSimpleMove();
-//      drive.setDrivePower(new Pose2d(0.3));
+      drive.moveForTime(50);
+      drive.stopSimpleMove();
+      drive.setDrivePower(new Pose2d(0.1));
    }
 
    protected void eject(int stable_time) throws Exception {
       drive.moveForTime(stable_time);
       upper.armChange(0.1);
+      upper.sleep_with_drive(50);
       upper.guideBack();
-      drive.moveForTime(60);
+      drive.moveForTime(10);
       upper.openHand();
-      drive.moveForTime(100);
+      drive.moveForTime(80);
       upper.post_eject();
    }
 
@@ -275,8 +306,10 @@ public abstract class AutoMaster extends LinearOpMode {
       drive.setSimpleMovePower(1);
       upper.post_eject();
       drive.initSimpleMove(endPos);
+      upper.toOrigional();
       drive.waitForIdle();
-      drive.moveForTime(200);
+      drive.moveForTime(100);
+      drive.setDrivePower(new Pose2d());
    }
 
    /**

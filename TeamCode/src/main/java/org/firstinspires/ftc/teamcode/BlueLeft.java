@@ -13,7 +13,7 @@ public class BlueLeft extends AutoMaster{
       firstJunctionPos = Junction.SIDE_HIGH;
       initHardware();
       try {
-         longMoveNormal(300);
+         longMoveNormal(100);
          eject(0);
          for (cone_index = 4; cone_index >= 0; cone_index--) {
             try {

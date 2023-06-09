@@ -29,7 +29,7 @@ public class XCYAimPipeline extends OpenCvPipeline {
    public static int coneAimThresh = 170;
    public static int junctionThresh = 70;
    public static int blur_pix = 5;
-   public static int min_detect_area = 500;
+   public static int min_detect_area = 900;
 
    private boolean isSideRed = false;
    private boolean junctionMode = false;
